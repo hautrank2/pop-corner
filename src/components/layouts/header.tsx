@@ -29,7 +29,7 @@ function Header() {
   return (
     <header
       className={cn(
-        "flex justify-between items-center w-full fixed top-0 h-16 px-16 border-b z-20",
+        "flex justify-between items-center w-full fixed top-0 h-[var(--header-height)] px-16 border-b z-20",
         "transition-colors easy duration-500",
         headerBg ? "bg-background/90" : ""
       )}
