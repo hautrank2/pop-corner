@@ -26,6 +26,9 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
+import httpClient from "~/api/httpClient";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // ----- Zod schema -----
 const LoginSchema = z.object({
@@ -41,6 +44,7 @@ type LoginFormValues = z.infer<typeof LoginSchema>;
 
 const LoginPage = () => {
   const [isLoading, setIsLoading] = React.useState(false);
+  const router = useRouter();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(LoginSchema),
@@ -52,15 +56,19 @@ const LoginPage = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    setIsLoading(true);
-
-    // TODO: Call your login API / server action here
-    // e.g. await loginAction(values)
-    console.log("Login submit:", values);
-
-    setTimeout(() => {
+    try {
+      setIsLoading(true);
+      const data = {
+        email: values.email,
+        password: values.password,
+      };
+      await httpClient.post(`/api/auth/login`, data);
+      router.push(`/`);
+    } catch (err) {
+      toast.error(JSON.stringify(err));
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -164,7 +172,7 @@ const LoginPage = () => {
                   <span className="text-xs text-muted-foreground">
                     Don&apos;t have an account?{" "}
                     <a
-                      href="/register"
+                      href="/auth/signup"
                       className="font-medium text-primary hover:underline"
                     >
                       Sign up

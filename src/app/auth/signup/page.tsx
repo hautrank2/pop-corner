@@ -31,6 +31,11 @@ import {
   DropzoneEmptyState,
   DropzoneContent,
 } from "~/components/ui/shadcn-io/dropzone";
+import { DatePicker } from "~/components/ui/date-picker";
+import httpClient from "~/api/httpClient";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import dayjs from "dayjs";
 
 const SignupSchema = z.object({
   name: z.string().min(1, "Name is required."),
@@ -56,6 +61,7 @@ type SignupFormValues = z.infer<typeof SignupSchema>;
 
 const SignupPage = () => {
   const [isLoading, setIsLoading] = React.useState(false);
+  const router = useRouter();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(SignupSchema),
@@ -69,15 +75,28 @@ const SignupPage = () => {
   });
 
   const onSubmit = async (values: SignupFormValues) => {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
+      const data = new FormData();
+      data.append("name", values.name);
+      data.append("email", values.email);
+      data.append("birthday", dayjs(values.birthday).format("YYYY-MM-DD"));
+      data.append("password", values.password);
+      if (values.avatar) {
+        data.append("avatar", values.avatar[0]);
+      }
+      const res = await httpClient.post(`/api/user`, data);
 
-    // TODO: Call your signup API / server action here
-    // e.g. await signupAction(values)
-    console.log("Signup submit:", values);
-
-    setTimeout(() => {
+      router.push(
+        `/auth/login?${new URLSearchParams({
+          email: res.data.email,
+        }).toString()}`
+      );
+    } catch (err) {
+      toast.error(JSON.stringify(err));
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -174,11 +193,7 @@ const SignupPage = () => {
                     <FormItem className="space-y-2">
                       <FormLabel>Birthday</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          type="date"
-                          className="bg-background"
-                        />
+                        <DatePicker {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -191,6 +206,8 @@ const SignupPage = () => {
                   name="avatar"
                   render={({ field }) => {
                     const files = field.value ?? [];
+                    const previewUrl =
+                      files.length > 0 ? URL.createObjectURL(files[0]) : null;
 
                     const handleDrop = (dropped: File[]) => {
                       // Giới hạn 1 file cho avatar
@@ -202,18 +219,27 @@ const SignupPage = () => {
                       <FormItem className="space-y-2">
                         <FormLabel>Avatar (optional)</FormLabel>
                         <FormControl>
-                          <Dropzone
-                            accept={{ "image/*": [] }}
-                            maxFiles={1}
-                            maxSize={1024 * 1024 * 10}
-                            minSize={1024}
-                            onDrop={handleDrop}
-                            onError={console.error}
-                            src={files}
-                          >
-                            <DropzoneEmptyState />
-                            <DropzoneContent />
-                          </Dropzone>
+                          <div>
+                            <Dropzone
+                              accept={{ "image/*": [] }}
+                              maxFiles={1}
+                              maxSize={1024 * 1024 * 10}
+                              minSize={1024}
+                              onDrop={handleDrop}
+                              onError={console.error}
+                              src={files}
+                            >
+                              <DropzoneEmptyState />
+                              <DropzoneContent />
+                            </Dropzone>
+                            {previewUrl && (
+                              <img
+                                src={previewUrl}
+                                alt="Avatar preview"
+                                className="h-32 w-32 mt-4 rounded-xl mx-auto object-cover border "
+                              />
+                            )}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -232,7 +258,7 @@ const SignupPage = () => {
             <p className="text-xs text-muted-foreground text-center w-full">
               Already have an account?{" "}
               <a
-                href="/login"
+                href="/auth/login"
                 className="font-medium text-primary hover:underline"
               >
                 Login
