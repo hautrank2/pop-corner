@@ -29,6 +29,7 @@ import {
 import httpClient from "~/api/httpClient";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 // ----- Zod schema -----
 const LoginSchema = z.object({
@@ -64,7 +65,13 @@ const LoginPage = () => {
       };
       await httpClient.post(`/api/auth/login`, data);
       router.push(`/`);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.log(err);
+      if (err instanceof AxiosError && typeof err.response?.data === "string") {
+        toast.error(err.response.data);
+        return;
+      }
+
       toast.error(JSON.stringify(err));
     } finally {
       setIsLoading(false);
