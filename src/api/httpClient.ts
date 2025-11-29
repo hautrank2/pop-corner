@@ -1,6 +1,7 @@
 import axios, {
   AxiosError,
   type AxiosInstance,
+  type AxiosRequestConfig,
   type AxiosResponse,
 } from "axios";
 
@@ -14,20 +15,40 @@ export interface HttpResponse<T = unknown> {
   data: T;
   dataNotFound?: Record<string, never>;
 }
-// Create Axios instance
-const httpClient: AxiosInstance = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_ENDPOINT}`,
-  timeout: 10000,
+
+type CreateHttpClientOptions = {
+  baseURL?: string | null; // null/undefined => không set baseURL
+  config?: AxiosRequestConfig;
+};
+
+export const createHttpClient = (
+  options?: CreateHttpClientOptions
+): AxiosInstance => {
+  const { baseURL, config } = options || {};
+
+  const instance = axios.create({
+    // chỉ set baseURL nếu có
+    ...(baseURL ? { baseURL } : {}),
+    timeout: 10000,
+    ...config,
+  });
+
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => response,
+    async (error: HttpError) => {
+      return Promise.reject(error);
+    }
+  );
+
+  return instance;
+};
+
+// --- Clients cụ thể ---
+
+// External API (.NET, microservice, ...)
+export const httpClient = createHttpClient({
+  baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT ?? undefined,
 });
 
-// Response interceptor
-httpClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response;
-  },
-  async (error: HttpError) => {
-    return Promise.reject(error);
-  }
-);
-
-export default httpClient;
+// Internal Next.js API (/api/...)
+export const internalHttpClient = createHttpClient();

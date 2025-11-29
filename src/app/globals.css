@@ -139,7 +139,7 @@
   --destructive: oklch(0.60 0.20 25);
 
   /* Border / Input / Ring */
-  --border: oklch(0.18 0.01 260 / 40%);
+  --border: oklch(27.08% 0.01098 254.078 / 0.4);
   --input: oklch(34.846% 0.00004 271.152 / 0.45);
   --ring: oklch(0.52 0.03 260);
 

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist_Mono, Montserrat } from "next/font/google";
 // @ts-ignore
 import "./globals.css";
-import Header from "~/components/layouts/header";
+import { AppHeader } from "~/components/layouts/header";
 import { Toaster } from "~/components/ui/sonner";
+import { AllProviders } from "~/providers";
 
 const geistSans = Montserrat({
   variable: "--font-geist-sans",
@@ -30,6 +31,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
       >
+        <AllProviders>
+          <AppHeader />
+        </AllProviders>
         <Toaster />
         {children}
       </body>

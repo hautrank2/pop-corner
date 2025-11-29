@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,10 +25,13 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
-import httpClient from "~/api/httpClient";
+import { internalHttpClient } from "~/api/httpClient";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
+import { LoginResponse } from "~/types/auth";
+import { useState } from "react";
+import { Separator } from "~/components/ui/separator";
+import { PasswordInput } from "~/components/ui/password-input";
 
 // ----- Zod schema -----
 const LoginSchema = z.object({
@@ -44,7 +46,7 @@ const LoginSchema = z.object({
 type LoginFormValues = z.infer<typeof LoginSchema>;
 
 const LoginPage = () => {
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const form = useForm<LoginFormValues>({
@@ -63,15 +65,9 @@ const LoginPage = () => {
         email: values.email,
         password: values.password,
       };
-      await httpClient.post(`/api/auth/login`, data);
+      await internalHttpClient.post<LoginResponse>(`/api/auth/login`, data);
       router.push(`/`);
-    } catch (err: unknown) {
-      console.log(err);
-      if (err instanceof AxiosError && typeof err.response?.data === "string") {
-        toast.error(err.response.data);
-        return;
-      }
-
+    } catch (err) {
       toast.error(JSON.stringify(err));
     } finally {
       setIsLoading(false);
@@ -81,7 +77,7 @@ const LoginPage = () => {
   return (
     <div
       className={cn(
-        "flex min-h-screen text-foreground bg-background"
+        "flex text-foreground bg-background"
         // "bg-[url(/img/login-bg.jpg)] bg-bottom bg-no-repeat bg-contain"
       )}
     >
@@ -139,9 +135,8 @@ const LoginPage = () => {
                         </button>
                       </div>
                       <FormControl>
-                        <Input
+                        <PasswordInput
                           {...field}
-                          type="password"
                           autoComplete="current-password"
                         />
                       </FormControl>
@@ -149,43 +144,6 @@ const LoginPage = () => {
                     </FormItem>
                   )}
                 />
-
-                {/* Remember + Sign up */}
-                <div className="flex items-center justify-between">
-                  <FormField
-                    control={form.control}
-                    name="remember"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center gap-2 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            // RHF expects boolean, shadcn Checkbox returns boolean | "indeterminate"
-                            onCheckedChange={(checked) =>
-                              field.onChange(checked === true)
-                            }
-                          />
-                        </FormControl>
-                        <Label
-                          htmlFor="remember"
-                          className="text-xs text-muted-foreground"
-                        >
-                          Remember me
-                        </Label>
-                      </FormItem>
-                    )}
-                  />
-
-                  <span className="text-xs text-muted-foreground">
-                    Don&apos;t have an account?{" "}
-                    <a
-                      href="/auth/signup"
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Sign up
-                    </a>
-                  </span>
-                </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Signing in..." : "Sign in"}
@@ -209,6 +167,19 @@ const LoginPage = () => {
               {/* Add Google icon here if you want */}
               Continue with Google
             </Button>
+
+            <Separator />
+            <div className="flex items-center justify-center">
+              <span className="text-xs text-muted-foreground text-center">
+                Don&apos;t have an account?{" "}
+                <a
+                  href="/auth/signup"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Sign up
+                </a>
+              </span>
+            </div>
           </CardFooter>
         </Card>
       </div>

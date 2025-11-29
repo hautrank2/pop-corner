@@ -32,7 +32,7 @@ import {
   DropzoneContent,
 } from "~/components/ui/shadcn-io/dropzone";
 import { DatePicker } from "~/components/ui/date-picker";
-import httpClient from "~/api/httpClient";
+import { httpClient } from "~/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -102,7 +102,7 @@ const SignupPage = () => {
   return (
     <div
       className={cn(
-        "flex min-h-screen text-foreground bg-background"
+        "flex text-foreground bg-background"
         // "bg-[url(/img/login-bg.jpg)] bg-bottom bg-no-repeat bg-contain"
       )}
     >
