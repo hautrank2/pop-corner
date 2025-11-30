@@ -15,8 +15,6 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { Checkbox } from "~/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -32,6 +30,7 @@ import { LoginResponse } from "~/types/auth";
 import { useState } from "react";
 import { Separator } from "~/components/ui/separator";
 import { PasswordInput } from "~/components/ui/password-input";
+import { signIn } from "next-auth/react";
 
 // ----- Zod schema -----
 const LoginSchema = z.object({
@@ -72,6 +71,10 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSigninGoogle = () => {
+    signIn("google", { callbackUrl: "/" });
   };
 
   return (
@@ -153,20 +156,20 @@ const LoginPage = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {/* <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
               <span>or</span>
               <div className="h-px flex-1 bg-border" />
-            </div>
+            </div> */}
 
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               className="w-full border-sidebar-border bg-background/60"
+              onClick={() => handleSigninGoogle()}
             >
-              {/* Add Google icon here if you want */}
               Continue with Google
-            </Button>
+            </Button> */}
 
             <Separator />
             <div className="flex items-center justify-center">

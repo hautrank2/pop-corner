@@ -1,8 +1,11 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { httpClient } from "~/api";
+import { SESSION_MAX_AGE } from "~/lib/session";
+import { TableResponse } from "~/types/query";
 import { UserModel } from "~/types/user";
 
-const MAX_AGE = +(process.env.NEXTAUTH_MAXAGE || 60 * 60 * 24 * 30);
+const MAX_AGE = SESSION_MAX_AGE;
 const DOMAIN = process.env.API_ENDPOINT;
 
 export const authOptions: AuthOptions = {
@@ -19,7 +22,6 @@ export const authOptions: AuthOptions = {
   secret: process.env.AUTH_SECRET,
   callbacks: {
     async signIn(props: any) {
-      console.log("signin", props);
       const { account, profile, user } = props;
       if (account?.provider === "google") {
         // 1. GET USER
@@ -42,41 +44,25 @@ export const authOptions: AuthOptions = {
         }
 
         // 3. Check user exists
-        const users: UserModel[] = await readJsonFile("src/data/user.json");
-        const exists = users.find((u) => u.id === id || u.email === email);
-
-        if (!exists) {
-          const username = (email && email.split("@")[0]) || id;
-          const data: UserModel = {
-            id,
-            name: user?.name ?? (profile as any)?.name ?? username,
-            image: user?.image ?? (profile as any)?.picture ?? "",
-            email,
-            username,
-          };
-          users.push(data);
-          await writeJsonFile("src/data/user.json", users);
-          return true;
-        }
-        return true;
+        const usersRes = await httpClient.get<TableResponse<UserModel>>(
+          `/api/user`,
+          {
+            params: { email },
+          }
+        );
+        const existUser = usersRes.data.items[0];
+        return !!existUser;
       }
       return false;
     },
     async jwt({ token, ...rest }) {
-      console.log("callbacks token", token, rest);
-      const users: UserModel[] = await readJsonFile("src/data/user.json");
-      const findUser = users.find((u) => u.email === token.email);
-
+      console.log("callbacks jwt", { token, rest });
       return {
         ...token,
-        ...findUser,
       };
     },
     async session({ session, token }) {
       console.log("callbacks session", session, token);
-      const users: UserModel[] = await readJsonFile("src/data/user.json");
-      const findUser = users.find((u) => u.email === token.email);
-      session.user = findUser;
       return session;
     },
   },

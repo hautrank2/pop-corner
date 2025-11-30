@@ -21,7 +21,6 @@ export const UserAvatar = ({}: UserAvatarProps) => {
   const { state, actions } = useApp();
   const data = state.session?.userData;
 
-  console.log(data);
   if (!data) {
     return (
       <Link href={getPath().login}>

@@ -60,7 +60,7 @@
   --popover-foreground: oklch(0.22 0.03 264);
 
   /* PRIMARY (MAGENTA NEON) — LIGHT MODE */
-  --primary: oklch(0.75 0.25 20);
+  --primary: oklch(65.086% 0.25993 359.619);
   --primary-foreground: oklch(0.98 0.01 260);
 
   /* Secondary */
@@ -101,6 +101,12 @@
   --sidebar-ring: oklch(0.65 0.06 256);
 
   --header-height: 80px;
+
+  --scrollbar-track: oklch(0.92 0.01 250);
+  /* gần --muted */
+  --scrollbar-thumb: oklch(65.086% 0.25993 359.619);
+  --scrollbar-thumb-hover: oklch(57.514% 0.22963 358.905);
+  /* magenta sáng hơn nhẹ */
 }
 
 /* ──────────────────────────────────────────────
@@ -120,7 +126,7 @@
   --popover-foreground: oklch(0.98 0.01 260);
 
   /* PRIMARY (MAGENTA NEON) — DARK MODE */
-  --primary: oklch(0.65 0.25 20);
+  --primary: oklch(65.086% 0.25993 359.619);
   --primary-foreground: oklch(0.98 0.01 260);
 
   /* Secondary */
@@ -159,6 +165,13 @@
   --sidebar-accent-foreground: oklch(0.98 0.01 260);
   --sidebar-border: oklch(0.18 0.01 260 / 40%);
   --sidebar-ring: oklch(0.52 0.03 260);
+
+
+  --scrollbar-track: oklch(0.20 0.02 260 / 0.7);
+  /* gần background/card dark */
+  --scrollbar-thumb: oklch(65.086% 0.25993 359.619);
+  --scrollbar-thumb-hover: oklch(57.514% 0.22963 358.905);
+  /* neon hơn trong dark */
 }
 
 @layer base {
@@ -169,4 +182,45 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+  /* completely remove track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary) !important;
+  border: none !important;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(from var(--primary) l c h * 1.15) !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+  /* 100% track transparent */
+}
+
+/* Hide scrollbar entirely if needed */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
 }

@@ -1,7 +1,7 @@
-export interface CommentModel {
+export type CommentModel = {
   id: string;
-  movieId: string;
   userId: string;
+  movieId: string;
   content: string;
   createdAt: string;
-}
+};
