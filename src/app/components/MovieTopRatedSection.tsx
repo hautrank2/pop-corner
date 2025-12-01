@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { StarIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 import { Card } from "~/components/ui/card";
 import { Description } from "~/components/ui/description";
@@ -18,24 +19,36 @@ export type MovieTopRatedSectionProps = {
 export const MovieTopRatedSection = ({ data }: MovieTopRatedSectionProps) => {
   return (
     <section className="movie-top-rated-section">
-      <div className="grid grid-cols-12 gap-8">
+      <div
+        className={cn(
+          "md:grid md:grid-cols-12 md:gap-8 pt-4",
+          "flex gap-4 overflow-x-auto no-scrollbar"
+        )}
+      >
         {data.map((item, index) => {
-          const bestItem = index < 2;
           return (
-            <Card
+            <Link
               key={item.id}
               className={cn(
-                "movie-item p-0 rounded-none border-0",
-                "relative flex! md:flex-row! justify-start",
+                "movie-item p-0 rounded-none bg-card border-0 hover:cursor-pointer mr-5",
+                "relative flex md:flex-row flex-col justify-start",
                 "h-[780px] md:h-[372px] 2xl:col-span-4 xl:col-span-6 col-span-12",
-                bestItem ? "2xl:h-[564px] 2xl:col-span-6" : ""
+                "min-w-[320px] sm:min-w-[520px] md:w-auto",
+                "2xl:h-[564px] 2xl:col-span-6"
               )}
+              href={`/movie/${item.id}`}
             >
+              <Typography
+                variant={"p"}
+                className="p-2 bg-primary absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-10"
+              >
+                #{index + 1}
+              </Typography>
               <div
                 className={cn(
                   "relative overflow-hidden group shrink-0",
-                  "w-full md:w-[248px] h-[400px] md:h-full",
-                  bestItem ? "2xl:w-[372px]" : ""
+                  "w-full md:w-[248px] h-[400px] sm:h-[640px] md:h-full",
+                  "2xl:w-[372px]"
                 )}
               >
                 <Image
@@ -81,7 +94,7 @@ export const MovieTopRatedSection = ({ data }: MovieTopRatedSectionProps) => {
                   {item.description}
                 </Typography>
               </div>
-            </Card>
+            </Link>
           );
         })}
       </div>
