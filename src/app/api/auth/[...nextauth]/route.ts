@@ -6,7 +6,6 @@ import { TableResponse } from "~/types/query";
 import { UserModel } from "~/types/user";
 
 const MAX_AGE = SESSION_MAX_AGE;
-const DOMAIN = process.env.API_ENDPOINT;
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -24,6 +23,7 @@ export const authOptions: AuthOptions = {
     async signIn(props: any) {
       const { account, profile, user } = props;
       if (account?.provider === "google") {
+        console.log(account, profile, user);
         // 1. GET USER
         const id = (profile as any)?.sub || user?.id;
         if (!id) {

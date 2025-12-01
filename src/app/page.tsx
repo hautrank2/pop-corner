@@ -28,8 +28,6 @@ export default async function Home() {
       "/api/artist"
     );
 
-    console.log(movieQuery, genreQuery, artisQuery);
-
     const trendingMovies = movieQuery.data.items.sort(
       (a, b) => b.view - a.view
     );

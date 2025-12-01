@@ -135,14 +135,14 @@
 
   /* Muted */
   --muted: oklch(0.28 0.03 260);
-  --muted-foreground: oklch(0.70 0.04 256);
+  --muted-foreground: oklch(0.7 0.04 256);
 
   /* Accent */
   --accent: oklch(0.28 0.03 260);
   --accent-foreground: oklch(0.98 0.01 260);
 
   /* Destructive */
-  --destructive: oklch(0.60 0.20 25);
+  --destructive: oklch(0.6 0.2 25);
 
   /* Border / Input / Ring */
   --border: oklch(27.08% 0.01098 254.078 / 0.4);
@@ -150,7 +150,7 @@
   --ring: oklch(0.52 0.03 260);
 
   /* Chart colors (vibrant neon for cinematic UI) */
-  --chart-1: oklch(0.50 0.24 20);
+  --chart-1: oklch(0.5 0.24 20);
   --chart-2: oklch(0.66 0.17 160);
   --chart-3: oklch(0.76 0.18 70);
   --chart-4: oklch(0.58 0.24 300);
@@ -166,8 +166,7 @@
   --sidebar-border: oklch(0.18 0.01 260 / 40%);
   --sidebar-ring: oklch(0.52 0.03 260);
 
-
-  --scrollbar-track: oklch(0.20 0.02 260 / 0.7);
+  --scrollbar-track: oklch(0.2 0.02 260 / 0.7);
   /* gần background/card dark */
   --scrollbar-thumb: oklch(65.086% 0.25993 359.619);
   --scrollbar-thumb-hover: oklch(57.514% 0.22963 358.905);
@@ -181,6 +180,10 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  ::selection {
+    @apply bg-primary text-primary-foreground;
   }
 }
 

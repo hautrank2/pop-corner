@@ -4,15 +4,12 @@ import React, { useEffect, useState } from "react";
 import { Typography } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
 import Nav from "./nav";
-import { useApp } from "~/providers";
 import { UserAvatar } from "../user";
 import Link from "next/link";
 
 export const AppHeader = () => {
   const headerHeight = 64;
   const [headerBg, setHeaderBg] = useState(false);
-  const { state } = useApp();
-  const { session } = state;
 
   useEffect(() => {
     const trackingScroll = () => {
@@ -41,16 +38,20 @@ export const AppHeader = () => {
     >
       <div className="header-branch">
         <Link href={"/"}>
-          <Typography variant={"h3"} className="flex items-center gap-1">
-            <span className="font-light">Pop corner</span>
+          <Typography
+            variant={"h3"}
+            className={cn(
+              "flex items-center gap-1",
+              "text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]"
+            )}
+          >
+            Pop corner
           </Typography>
         </Link>
       </div>
       <div className="header-search px-16"></div>
       <div className="header-extra flex items-center gap-4">
         <Nav />
-
-        {/* Model */}
         <UserAvatar />
       </div>
     </header>

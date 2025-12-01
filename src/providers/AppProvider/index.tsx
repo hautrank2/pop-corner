@@ -137,7 +137,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const onLogout = useCallback(async () => {
     try {
-      await internalHttpClient.post("/api/auth/logout");
+      await internalHttpClient.post("/api/logout");
       window.location.reload();
     } catch (err) {
       console.log(err);

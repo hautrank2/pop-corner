@@ -64,7 +64,7 @@ const LoginPage = () => {
         email: values.email,
         password: values.password,
       };
-      await internalHttpClient.post<LoginResponse>(`/api/auth/login`, data);
+      await internalHttpClient.post<LoginResponse>(`/api/login`, data);
       router.push(`/`);
     } catch (err) {
       toast.error(JSON.stringify(err));
@@ -73,8 +73,9 @@ const LoginPage = () => {
     }
   };
 
-  const handleSigninGoogle = () => {
-    signIn("google", { callbackUrl: "/" });
+  const handleSigninGoogle = async () => {
+    const signInRes = await signIn("google", { redirect: false });
+    console.log(signInRes);
   };
 
   return (
@@ -156,20 +157,20 @@ const LoginPage = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3">
-            {/* <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
               <span>or</span>
               <div className="h-px flex-1 bg-border" />
-            </div> */}
+            </div>
 
-            {/* <Button
+            <Button
               type="button"
               variant="outline"
               className="w-full border-sidebar-border bg-background/60"
               onClick={() => handleSigninGoogle()}
             >
               Continue with Google
-            </Button> */}
+            </Button>
 
             <Separator />
             <div className="flex items-center justify-center">
