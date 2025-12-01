@@ -6,6 +6,7 @@ import { cn } from "~/lib/utils";
 import Nav from "./nav";
 import { UserAvatar } from "../user";
 import Link from "next/link";
+import { Popcorn } from "lucide-react";
 
 export const AppHeader = () => {
   const headerHeight = 64;
@@ -37,7 +38,8 @@ export const AppHeader = () => {
       )}
     >
       <div className="header-branch">
-        <Link href={"/"}>
+        <Link href={"/"} className="flex items-center gap-2">
+          <Popcorn color="var(--primary)" />
           <Typography
             variant={"h3"}
             className={cn(
