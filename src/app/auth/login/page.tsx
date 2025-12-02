@@ -74,8 +74,7 @@ const LoginPage = () => {
   };
 
   const handleSigninGoogle = async () => {
-    const signInRes = await signIn("google", { redirect: false });
-    console.log(signInRes);
+    await signIn("google", { callbackUrl: "/" });
   };
 
   return (

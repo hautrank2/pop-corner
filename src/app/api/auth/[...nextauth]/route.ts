@@ -1,9 +1,9 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { cookies } from "next/headers";
 import { httpClient } from "~/api";
-import { SESSION_MAX_AGE } from "~/lib/session";
-import { TableResponse } from "~/types/query";
-import { UserModel } from "~/types/user";
+import { handleAfterLogin, SESSION_MAX_AGE } from "~/lib/session";
+import { LoginResponse } from "~/types/auth";
 
 const MAX_AGE = SESSION_MAX_AGE;
 
@@ -23,7 +23,6 @@ export const authOptions: AuthOptions = {
     async signIn(props: any) {
       const { account, profile, user } = props;
       if (account?.provider === "google") {
-        console.log(account, profile, user);
         // 1. GET USER
         const id = (profile as any)?.sub || user?.id;
         if (!id) {
@@ -43,27 +42,18 @@ export const authOptions: AuthOptions = {
           return false;
         }
 
-        // 3. Check user exists
-        const usersRes = await httpClient.get<TableResponse<UserModel>>(
-          `/api/user`,
+        const userRes = await httpClient.post<LoginResponse>(
+          "/api/auth/login/email",
           {
-            params: { email },
+            email,
           }
         );
-        const existUser = usersRes.data.items[0];
-        return !!existUser;
+        const { token, ...userData } = userRes.data;
+        const cookie = await cookies();
+        handleAfterLogin(cookie, token, userData);
+        return true;
       }
       return false;
-    },
-    async jwt({ token, ...rest }) {
-      console.log("callbacks jwt", { token, rest });
-      return {
-        ...token,
-      };
-    },
-    async session({ session, token }) {
-      console.log("callbacks session", session, token);
-      return session;
     },
   },
 };
