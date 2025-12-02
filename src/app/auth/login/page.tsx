@@ -15,8 +15,6 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { Checkbox } from "~/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -32,6 +30,7 @@ import { LoginResponse } from "~/types/auth";
 import { useState } from "react";
 import { Separator } from "~/components/ui/separator";
 import { PasswordInput } from "~/components/ui/password-input";
+import { signIn } from "next-auth/react";
 
 // ----- Zod schema -----
 const LoginSchema = z.object({
@@ -65,13 +64,18 @@ const LoginPage = () => {
         email: values.email,
         password: values.password,
       };
-      await internalHttpClient.post<LoginResponse>(`/api/auth/login`, data);
+      await internalHttpClient.post<LoginResponse>(`/api/login`, data);
       router.push(`/`);
     } catch (err) {
       toast.error(JSON.stringify(err));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSigninGoogle = async () => {
+    const signInRes = await signIn("google", { redirect: false });
+    console.log(signInRes);
   };
 
   return (
@@ -163,8 +167,8 @@ const LoginPage = () => {
               type="button"
               variant="outline"
               className="w-full border-sidebar-border bg-background/60"
+              onClick={() => handleSigninGoogle()}
             >
-              {/* Add Google icon here if you want */}
               Continue with Google
             </Button>
 
