@@ -1,5 +1,5 @@
 import { CommentModel } from "./comment";
-import { RatingModel } from "./raing";
+import { RatingModel } from "./rating";
 
 export type UserModel = {
   id: string; // Guid

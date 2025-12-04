@@ -1,6 +1,4 @@
-import { cookies } from "next/headers";
 import { httpClient } from "~/api";
-import { SESSION_USER_LOCAL } from "~/lib/session";
 import { ArtistModel } from "~/types/artist";
 import { GenreModel } from "~/types/genre";
 import { MovieModel } from "~/types/movie";
@@ -15,11 +13,9 @@ import { MovieTopRatedSection } from "./components/MovieTopRatedSection";
 import { GenreSection } from "./components/GenreSection";
 import { ActorSection } from "./components/ActorSection";
 import { AppFooter } from "~/components/layouts/footer";
+import Link from "next/link";
 
 export default async function Home() {
-  const cookie = await cookies();
-  const userData = cookie.get(SESSION_USER_LOCAL);
-
   try {
     const movieQuery = await httpClient.get<TableResponse<MovieModel>>(
       "/api/movie"
@@ -42,7 +38,17 @@ export default async function Home() {
     return (
       <div className="home-page pt-2">
         <SectionWrapper className="mt-0">
-          <SectionHeader title="Trending" />
+          <SectionHeader
+            title="Trending"
+            extra={
+              <Link
+                href={"/movie"}
+                className="text-secondary hover:underline text-xl"
+              >
+                Full movies
+              </Link>
+            }
+          />
           <SectionContent>
             <MovieTrendingSection data={trendingMovies} />
           </SectionContent>

@@ -2,7 +2,7 @@ import { ArtistModel } from "./artist";
 import { CommentModel } from "./comment";
 import { CreditModel } from "./credit";
 import { GenreModel } from "./genre";
-import { RatingModel } from "./raing";
+import { RatingModel } from "./rating";
 
 export type MovieModel = {
   id: string; // Guid
