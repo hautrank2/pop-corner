@@ -1,50 +1,59 @@
 import { MovieModel } from "~/types/movie";
 import { MovieCard } from "./components/MovieCard";
 import { MoviePagination } from "./components/MoviePagination";
+import { httpClient } from "~/api";
+import { TableResponse, TableResponseBase } from "~/types/query";
+import { ServerSearchParamsDef } from "~/types/page";
+import { cn } from "~/lib/utils";
+import { Card } from "~/components/ui/card";
+import { AppFooter } from "~/components/layouts/footer";
+import { Typography } from "~/components/ui/typography";
 
 const PAGE_SIZE = 10;
 
-async function fetchMovies(page: number): Promise<{
-  total: number;
-  data: MovieModel[];
-}> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/movies?page=${page}&pageSize=${PAGE_SIZE}`,
-    { cache: "no-store" }
-  );
+const fetchMovies = async (
+  page: number
+): Promise<TableResponse<MovieModel>> => {
+  const res = await httpClient.get<TableResponse<MovieModel>>("/api/movie", {
+    params: { page, pageSize: PAGE_SIZE },
+  });
 
-  if (!res.ok) {
-    return { total: 0, data: [] };
-  }
-
-  return res.json();
-}
+  return res.data ?? TableResponseBase;
+};
 
 export default async function MoviePage({
-  searchParams,
+  searchParams: _searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: ServerSearchParamsDef;
 }) {
+  const searchParams = await _searchParams;
   const page = Number(searchParams.page) || 1;
 
-  const { total, data: movies } = await fetchMovies(page);
+  const data = await fetchMovies(page);
+  const { total, items: movies } = data;
 
+  console.log(data);
   return (
-    <div className="container mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold mb-8">Movies</h1>
+    <div className="container mx-auto px-4 pt-4">
+      <Typography variant={"h2"} className="text-secondary">
+        Movies
+      </Typography>
 
       {/* Grid of cards */}
       {movies.length === 0 ? (
         <div className="text-muted-foreground">No movies found.</div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {movies.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+            <Card key={movie.id} className={cn("p-0")}>
+              <MovieCard data={movie} />
+            </Card>
           ))}
         </div>
       )}
 
       <MoviePagination total={total} page={page} pageSize={PAGE_SIZE} />
+      <AppFooter />
     </div>
   );
 }
