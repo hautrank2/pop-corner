@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CommentModel } from "~/types/comment";
 import { Typography } from "~/components/ui/typography";
 import { Separator } from "~/components/ui/separator";
@@ -9,26 +9,49 @@ import { CommentInput } from "./CommentInput";
 
 interface CommentsSectionProps {
   movieId: string;
-  initialComments: CommentModel[];
 }
 
-export function CommentsSection({ movieId, initialComments }: CommentsSectionProps) {
-  const [comments, setComments] = useState<CommentModel[]>(initialComments);
+export function CommentsSection({ movieId }: CommentsSectionProps) {
+  const [comments, setComments] = useState<CommentModel[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const response = await fetch(`/api/movie/${movieId}/comment`);
+        const data: CommentModel[] = await response.json();
+        setComments(data);
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchComments();
+  }, [movieId]);
 
   const handleSubmitComment = async (content: string) => {
-    // TODO: Implement API call to post comment
-    console.log("Submitting comment:", content);
-    
-    // Mock adding comment
-    const newComment: CommentModel = {
-      id: Date.now().toString(),
-      userId: "current-user",
-      movieId,
-      content,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setComments([newComment, ...comments]);
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/movie/${movieId}/comment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!response.ok) throw new Error("Failed to post comment");
+
+      // Cập nhật UI ngay lập tức với comment mới trả về từ API
+      // thay vì phải fetch lại toàn bộ danh sách
+      const newComment: CommentModel = await response.json();
+      setComments((prevComments) => [newComment, ...prevComments]);
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+      // Optional: show an error message to the user
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReply = (commentId: string) => {
@@ -48,17 +71,21 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
 
       {/* Comments List */}
       <div className="flex flex-col gap-8 mb-8">
-        {comments.map((comment) => (
-          <CommentCard
-            key={comment.id}
-            comment={comment}
-            onReply={handleReply}
-          />
-        ))}
+        {isLoading ? (
+          <Typography>Loading comments...</Typography>
+        ) : (
+          comments.map((comment) => (
+            <CommentCard
+              key={comment.id}
+              comment={comment}
+              onReply={handleReply}
+            />
+          ))
+        )}
       </div>
 
       {/* Comment Input */}
-      <CommentInput onSubmit={handleSubmitComment} />
+      <CommentInput onSubmit={handleSubmitComment} isSubmitting={isSubmitting} />
     </div>
   );
 }

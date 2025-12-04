@@ -1,46 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+import { Send } from "lucide-react";
 
 interface CommentInputProps {
   onSubmit: (content: string) => void;
+  isSubmitting: boolean;
 }
 
-export function CommentInput({ onSubmit }: CommentInputProps) {
-  const [comment, setComment] = useState("");
+export function CommentInput({ onSubmit, isSubmitting }: CommentInputProps) {
+  const [content, setContent] = useState("");
 
   const handleSubmit = () => {
-    if (comment.trim()) {
-      onSubmit(comment);
-      setComment("");
+    if (content.trim() && !isSubmitting) {
+      onSubmit(content);
+      setContent("");
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
       handleSubmit();
     }
   };
 
   return (
-    <div className="flex items-center gap-8">
+    <div className="flex items-center gap-4">
       <Input
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
+        placeholder="Write a comment..."
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
         onKeyPress={handleKeyPress}
-        placeholder="Write comment...."
-        className="flex-1 bg-transparent border-none text-text-muted placeholder:text-text-muted text-base font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
+        disabled={isSubmitting} // Vô hiệu hóa khi đang gửi
+        className="bg-transparent border-gray-600 focus:border-neon-pink"
       />
-      <Button
-        onClick={handleSubmit}
-        disabled={!comment.trim()}
-        className="h-12 w-12 rounded-full bg-neon-pink hover:bg-neon-pink/90 disabled:opacity-50"
-      >
-        <Send className="h-6 w-6 text-white" />
+      <Button onClick={handleSubmit} disabled={isSubmitting} size="icon">
+        <Send className="h-4 w-4" />
       </Button>
     </div>
   );

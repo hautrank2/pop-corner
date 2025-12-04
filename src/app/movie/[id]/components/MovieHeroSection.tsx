@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -25,14 +26,27 @@ interface MovieHeroSectionProps {
 
 export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
   const router = useRouter();
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const galleryImages =
-    movie.imgUrls.length > 0 ? movie.imgUrls.slice(0, 6) : Array(6).fill(movie.posterUrl);
+    movie.imgUrls.length > 0
+      ? movie.imgUrls.slice(0, 6)
+      : Array(6).fill(movie.posterUrl);
 
   const remainingImages = Math.max(0, movie.imgUrls.length - 6);
 
+  const getYouTubeEmbedUrl = (url: string | undefined) => {
+    if (!url) return null;
+    // Trích xuất video ID từ các định dạng URL YouTube khác nhau
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    const videoId = match && match[2].length === 11 ? match[2] : null;
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : null;
+  };
+
   return (
-    <div className="px-16 py-8">
+    <div className="px-4 md:px-10 lg:px-16 py-8">
       {/* Back Button */}
       <Button
         variant="ghost"
@@ -43,54 +57,68 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
         <span className="text-2xl font-medium">Back</span>
       </Button>
 
-      {/* Main Content */}
-      <div className="flex flex-col gap-10">
+      {/* MAIN WRAPPER */}
+      <div className="flex flex-col gap-12">
+        {/* ==============================
+            ROW 1: POSTER + VIDEO
+        =============================== */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
+          {/* POSTER */}
+          <div className="relative lg:w-1/4 md:w-1/3 w-full aspect-[2/3] rounded-lg overflow-hidden">
+            <Image
+              src={getAssetUrl(movie.posterUrl)}
+              alt={movie.title}
+              fill
+              className="object-cover"
+              priority
+            />
 
-        {/* ---------- ROW 1: POSTER + NAME | VIDEO ---------- */}
-        <div className="flex items-start gap-10">
-
-          {/* Poster + Title */}
-          <div className="flex-shrink-0 w-[450px] flex flex-col gap-4">
-
-            {/* Poster */}
-            <div className="relative w-full h-[400px] rounded-lg overflow-hidden">
-              <Image
-                src={getAssetUrl(movie.posterUrl)}
-                alt={movie.title}
-                fill
-                className="object-cover"
-                priority
-              />
+            {/* Title Overlay */}
+            <div className="absolute bottom-0 left-0 w-full bg-black/60 px-4 py-3">
+              <Typography
+                variant="h2"
+                className="text-neon-pink font-semibold leading-tight"
+              >
+                {movie.title} ({dayjs(movie.releaseDate).format("YYYY")})
+              </Typography>
             </div>
-
-            {/* Movie Title */}
-            <Typography variant="h2" className="text-foreground font-semibold">
-              {movie.title} ({dayjs(movie.releaseDate).format("YYYY")})
-            </Typography>
           </div>
 
-          {/* Video */}
-          <div className="flex-1">
-            <div className="relative w-full h-[450px] bg-panel-bg rounded-lg overflow-hidden group cursor-pointer">
-              <Image
-                src={getAssetUrl(movie.posterUrl)}
-                alt={`${movie.title} trailer`}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition-colors">
-                <PlayCircle className="h-24 w-24 text-white" />
+          {/* VIDEO */}
+          <div className="flex-1 relative aspect-video bg-panel-bg rounded-lg overflow-hidden">
+            {isPlaying && getYouTubeEmbedUrl(movie.trailerUrl) ? (
+              <iframe
+                src={getYouTubeEmbedUrl(movie.trailerUrl)!}
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="w-full h-full"
+              ></iframe>
+            ) : (
+              <div
+                className="w-full h-full group cursor-pointer"
+                onClick={() => setIsPlaying(true)}
+              >
+                <Image
+                  src={getAssetUrl(movie.posterUrl)}
+                  alt={`${movie.title} trailer`}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition-colors">
+                  <PlayCircle className="h-24 w-24 text-white" />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* ---------- ROW 2: INFO PANEL | GALLERY ---------- */}
-        <div className="flex items-start gap-10">
-
-          {/* Info Panel */}
-          <div className="w-[450px] bg-panel-bg p-6 rounded-lg flex flex-col gap-4">
-
+        {/* ==============================
+            ROW 2: INFO PANEL + GALLERY
+        =============================== */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
+          {/* INFO PANEL */}
+          <div className="lg:w-1/4 md:w-1/3 w-full bg-panel-bg p-6 rounded-lg flex flex-col gap-4">
             {/* Rating */}
             <div className="flex items-center gap-2">
               <Star className="h-5 w-5 fill-star-gold text-star-gold" />
@@ -102,19 +130,27 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
             {/* Metadata */}
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
-                <Typography className="text-foreground font-medium">Duration:</Typography>
+                <Typography className="text-foreground font-medium">
+                  Duration:
+                </Typography>
                 <Typography className="text-text-secondary font-medium">
                   {formatDuration(movie.duration)}
                 </Typography>
               </div>
+
               <div className="flex gap-2">
-                <Typography className="text-foreground font-medium">Director:</Typography>
+                <Typography className="text-foreground font-medium">
+                  Director:
+                </Typography>
                 <Typography className="text-text-secondary font-medium">
                   {movie.director?.name || "Unknown"}
                 </Typography>
               </div>
+
               <div className="flex gap-2">
-                <Typography className="text-foreground font-medium">View:</Typography>
+                <Typography className="text-foreground font-medium">
+                  View:
+                </Typography>
                 <Typography className="text-text-secondary font-medium">
                   {formatNumber(movie.view)}
                 </Typography>
@@ -126,30 +162,46 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
               {movie.description}
             </Typography>
 
-            {/* Action Buttons */}
+            {/* ACTION BUTTONS */}
             <div className="flex items-center gap-8 mt-2">
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
+              >
                 <Heart className="h-6 w-6 text-white" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
+              >
                 <Plus className="h-6 w-6 text-white" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
+              >
                 <Share2 className="h-6 w-6 text-white" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
+              >
                 <MessageSquare className="h-6 w-6 text-white" />
               </Button>
             </div>
           </div>
 
-          {/* Gallery */}
+          {/* IMAGE GALLERY */}
           <div className="flex-1 bg-panel-bg p-4 rounded-lg">
             <div className="grid grid-cols-3 gap-0.5">
               {galleryImages.map((imgUrl, index) => (
                 <div
                   key={index}
-                  className="relative h-[230px] w-full overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                  className="relative aspect-video overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   <Image
                     src={getAssetUrl(imgUrl)}
@@ -157,9 +209,13 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
                     fill
                     className="object-cover"
                   />
+
                   {index === 5 && remainingImages > 0 && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <Typography variant="h2" className="text-white font-medium">
+                      <Typography
+                        variant="h2"
+                        className="text-white font-medium"
+                      >
                         +{remainingImages}
                       </Typography>
                     </div>
@@ -168,7 +224,6 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
               ))}
             </div>
           </div>
-
         </div>
       </div>
     </div>

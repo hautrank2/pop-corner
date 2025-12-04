@@ -18,9 +18,9 @@ export default async function MovieDetailPage({ params }: MovieDetailPageProps) 
     const movie = movieResponse.data;
 
     // Try to fetch comments, but don't fail if endpoint doesn't exist
-    let comments: CommentModel[] = [];
+    let comments: CommentModel[] = []; 
     try {
-      const commentsResponse = await httpClient.get<CommentModel[]>(`/api/comment/movie/${id}`);
+      const commentsResponse = await httpClient.get<CommentModel[]>(`/api/movie/${id}/comment`);
       comments = commentsResponse.data;
     } catch (commentError) {
       console.log("Comments endpoint not available, using empty array");
