@@ -27,6 +27,7 @@ interface MovieHeroSectionProps {
 export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const galleryImages =
     movie.imgUrls.length > 0
@@ -58,11 +59,11 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
       </Button>
 
       {/* MAIN WRAPPER */}
-      <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-4">
         {/* ==============================
             ROW 1: POSTER + VIDEO
         =============================== */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* POSTER */}
           <div className="relative lg:w-1/4 md:w-1/3 w-full aspect-[2/3] rounded-lg overflow-hidden">
             <Image
@@ -116,7 +117,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
         {/* ==============================
             ROW 2: INFO PANEL + GALLERY
         =============================== */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* INFO PANEL */}
           <div className="lg:w-1/4 md:w-1/3 w-full bg-panel-bg p-6 rounded-lg flex flex-col gap-4">
             {/* Rating */}
@@ -158,12 +159,25 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
             </div>
 
             {/* Description */}
-            <Typography className="text-foreground font-medium leading-relaxed">
-              {movie.description}
-            </Typography>
+            <div className="flex flex-col">
+              <Typography
+                className={`text-foreground font-medium leading-relaxed ${
+                  !isDescriptionExpanded ? "line-clamp-3" : ""
+                }`}
+              >
+                {movie.description}
+              </Typography>
+              <Button
+                variant="link"
+                className="p-0 h-auto text-neon-pink hover:text-neon-pink/80 self-start text-sm"
+                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              >
+                {isDescriptionExpanded ? "Thu gọn" : "Xem thêm"}
+              </Button>
+            </div>
 
             {/* ACTION BUTTONS */}
-            <div className="flex items-center gap-8 mt-2">
+            <div className="flex flex-wrap items-center gap-8 mt-2">
               <Button
                 variant="ghost"
                 size="icon"

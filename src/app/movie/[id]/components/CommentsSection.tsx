@@ -9,6 +9,7 @@ import { CommentInput } from "./CommentInput";
 
 interface CommentsSectionProps {
   movieId: string;
+  initialComments?: CommentModel[];
 }
 
 export function CommentsSection({ movieId }: CommentsSectionProps) {
@@ -60,7 +61,7 @@ export function CommentsSection({ movieId }: CommentsSectionProps) {
   };
 
   return (
-    <div className="px-16 py-8 bg-panel-bg">
+    <div className="px-16 py-8">
       {/* Comment Header */}
       <div className="flex flex-col gap-2 mb-8">
         <Typography variant="h3" className="text-neon-pink font-semibold">

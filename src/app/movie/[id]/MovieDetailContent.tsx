@@ -13,9 +13,11 @@ interface MovieDetailContentProps {
 
 export function MovieDetailContent({ movie, comments }: MovieDetailContentProps) {
   return (
-    <div className="min-h-screen bg-page-bg">
-      <MovieHeroSection movie={movie} />
-      <CommentsSection movieId={movie.id} initialComments={comments} />
+    <div className="flex min-h-screen flex-col bg-page-bg">
+      <main className="flex-grow">
+        <MovieHeroSection movie={movie} />
+        <CommentsSection movieId={movie.id} initialComments={comments} />
+      </main>
       <AppFooter />
     </div>
   );
