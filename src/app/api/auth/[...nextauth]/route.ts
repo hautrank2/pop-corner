@@ -19,50 +19,62 @@ export const authOptions: AuthOptions = {
     maxAge: MAX_AGE,
   },
   secret: process.env.AUTH_SECRET,
+
   callbacks: {
-    async signIn(props: any) {
-      const { account, profile, user } = props;
-      if (account?.provider === "google") {
-        console.log(account, profile, user);
-        // 1. GET USER
-        const id = (profile as any)?.sub || user?.id;
-        if (!id) {
-          console.error("[signIn] Missing user id (google sub).");
-          return false;
-        }
+    /*** SIGN IN VALIDATION ***/
+    async signIn({ account, profile, user }) {
+      if (account?.provider !== "google") return false;
 
-        // 2. GET EMAIL
-        const email = user?.email ?? (profile as any)?.email ?? null;
-        const emailVerified =
-          (profile as any)?.email_verified ??
-          (profile as any)?.verified_email ??
-          false;
+      // 1. Lấy email
+      const email =
+        user?.email ||
+        (profile as any)?.email ||
+        null;
 
-        if (!email || !emailVerified) {
-          console.warn("[signIn] Email not verified or missing.");
-          return false;
-        }
+      const emailVerified =
+        (profile as any)?.email_verified ||
+        (profile as any)?.verified_email ||
+        false;
 
-        // 3. Check user exists
-        const usersRes = await httpClient.get<TableResponse<UserModel>>(
-          `/api/user`,
-          {
-            params: { email },
-          }
-        );
-        const existUser = usersRes.data.items[0];
-        return !!existUser;
+      if (!email || !emailVerified) {
+        console.error("[signIn] Email missing or not verified.");
+        return false;
       }
-      return false;
+
+      // 2. Kiểm tra user có tồn tại trong DB chưa
+      try {
+        const res = await httpClient.get<TableResponse<UserModel>>(`/api/user`, {
+          params: { email },
+        });
+
+        const existUser = res.data.items?.[0];
+        if (!existUser) return false;
+
+        // 3. Lưu user vào object user để session + jwt dùng
+        (user as any).dbUser = existUser;
+        return true;
+      } catch (err) {
+        console.error("[signIn] API error:", err);
+        return false;
+      }
     },
-    async jwt({ token, ...rest }) {
-      console.log("callbacks jwt", { token, rest });
-      return {
-        ...token,
-      };
+
+    /*** JWT: Lưu DB user vào JWT token ***/
+    async jwt({ token, user }) {
+      if ((user as any)?.dbUser) {
+        token.dbUser = (user as any).dbUser;
+      }
+      return token;
     },
+
+    /*** SESSION: Đưa dbUser xuống FE ***/
     async session({ session, token }) {
-      console.log("callbacks session", session, token);
+      if (token.dbUser) {
+        session.user = {
+          ...session.user,
+          ...token.dbUser,
+        };
+      }
       return session;
     },
   },

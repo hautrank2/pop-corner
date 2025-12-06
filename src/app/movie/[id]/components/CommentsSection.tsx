@@ -1,92 +1,179 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { httpClient } from "~/api";
 import { CommentModel } from "~/types/comment";
-import { Typography } from "~/components/ui/typography";
-import { Separator } from "~/components/ui/separator";
 import { CommentCard } from "./CommentCard";
 import { CommentInput } from "./CommentInput";
+import { Typography } from "~/components/ui/typography";
+import { Separator } from "~/components/ui/separator";
+import { toast } from "sonner";
 
 interface CommentsSectionProps {
   movieId: string;
-  initialComments?: CommentModel[];
+  initialComments: CommentModel[];
 }
 
-export function CommentsSection({ movieId }: CommentsSectionProps) {
-  const [comments, setComments] = useState<CommentModel[]>([]);
+/** Build nested comment tree from flat array */
+const buildCommentTree = (comments: CommentModel[]): CommentModel[] => {
+  const map = new Map<string, CommentModel>();
+  const roots: CommentModel[] = [];
+
+  comments.forEach((c) => {
+    c.replies = Array.isArray(c.replies) ? c.replies : [];
+    map.set(c.id, c);
+  });
+
+  comments.forEach((c) => {
+    if (c.parentId) {
+      const parent = map.get(c.parentId);
+      if (parent) parent.replies.push(c);
+      else roots.push(c);
+    } else {
+      roots.push(c);
+    }
+  });
+
+  // remove duplicate IDs
+  return Array.from(new Map(roots.map((c) => [c.id, c])).values());
+};
+
+export function CommentsSection({ movieId, initialComments }: CommentsSectionProps) {
+  const { status } = useSession();
+  const [comments, setComments] = useState<CommentModel[]>(() =>
+    buildCommentTree(initialComments ?? [])
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchComments = async () => {
+      setIsRefreshing(true);
       try {
-        const response = await fetch(`/api/movie/${movieId}/comment`);
-        const data: CommentModel[] = await response.json();
-        setComments(data);
-      } catch (error) {
-        console.error("Error fetching comments:", error);
+        const res = await httpClient.get<CommentModel[]>(
+          `/api/movie/${movieId}/comment`
+        );
+
+        // res.data phải là CommentModel[]
+        const list: CommentModel[] = Array.isArray(res.data) ? res.data : [];
+
+        const uniqueList = Array.from(new Map(list.map((c) => [c.id, c])).values());
+
+        if (mounted) setComments(buildCommentTree(uniqueList));
+      } catch (err) {
+        console.error("fetchComments error:", err);
+        toast.error("Could not load comments.");
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsRefreshing(false);
       }
     };
+
     fetchComments();
+
+    return () => {
+      mounted = false;
+    };
   }, [movieId]);
 
-  const handleSubmitComment = async (content: string) => {
+  const handleSubmit = async (content: string, parentId: string | null = null) => {
+    if (!content?.trim()) return;
+
+    if (status !== "authenticated") {
+      toast.error("You must be logged in to comment.");
+      return;
+    }
+
     setIsSubmitting(true);
+
     try {
-      const response = await fetch(`/api/movie/${movieId}/comment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
+      const res = await httpClient.post<CommentModel>(
+        `/api/movie/${movieId}/comment`,
+        { content, parentId }
+      );
 
-      if (!response.ok) throw new Error("Failed to post comment");
+      const newComment: CommentModel | null =
+        res.data && typeof res.data === "object" ? res.data : null;
 
-      // Cập nhật UI ngay lập tức với comment mới trả về từ API
-      // thay vì phải fetch lại toàn bộ danh sách
-      const newComment: CommentModel = await response.json();
-      setComments((prevComments) => [newComment, ...prevComments]);
-    } catch (error) {
-      console.error("Error submitting comment:", error);
-      // Optional: show an error message to the user
+      if (!newComment) {
+        toast.error("Unexpected response from server.");
+        return;
+      }
+
+      if (newComment.parentId) {
+        setComments((prev) => {
+          const addReply = (list: CommentModel[]): CommentModel[] =>
+            list.map((c) => {
+              if (c.id === newComment.parentId) {
+                return { ...c, replies: [...(c.replies ?? []), newComment] };
+              }
+              if (c.replies?.length) {
+                return { ...c, replies: addReply(c.replies) };
+              }
+              return c;
+            });
+          return addReply(prev);
+        });
+        setActiveReplyId(null);
+      } else {
+        setComments((prev) => [{ ...newComment, replies: [] }, ...prev]);
+      }
+
+      toast.success("Comment posted!");
+    } catch (err) {
+      console.error("post comment error:", err);
+      toast.error("Failed to post comment.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleReply = (commentId: string) => {
-    console.log("Reply to comment:", commentId);
-    // TODO: Implement reply functionality
-  };
-
   return (
     <div className="px-16 py-8">
-      {/* Comment Header */}
       <div className="flex flex-col gap-2 mb-8">
         <Typography variant="h3" className="text-neon-pink font-semibold">
-          Comment
+          Comments
         </Typography>
         <Separator className="bg-neon-pink h-0.5 w-[360px]" />
       </div>
 
-      {/* Comments List */}
-      <div className="flex flex-col gap-8 mb-8">
-        {isLoading ? (
+      <div className="flex flex-col gap-6 mb-8">
+        {isRefreshing && comments.length === 0 ? (
           <Typography>Loading comments...</Typography>
+        ) : comments.length === 0 ? (
+          <Typography>No comments yet. Be the first!</Typography>
         ) : (
-          comments.map((comment) => (
+          comments.map((c, idx) => (
             <CommentCard
-              key={comment.id}
-              comment={comment}
-              onReply={handleReply}
+              key={`${c.id}-${idx}`}
+              comment={c}
+              onReplyClick={setActiveReplyId}
+              onReplySubmit={handleSubmit}
+              isReplying={activeReplyId === c.id}
+              isSubmitting={isSubmitting && activeReplyId === c.id}
             />
           ))
         )}
       </div>
 
-      {/* Comment Input */}
-      <CommentInput onSubmit={handleSubmitComment} isSubmitting={isSubmitting} />
+      {status === "authenticated" ? (
+        <>
+          <Typography variant="h4" className="mb-4 font-semibold">
+            Leave a Comment
+          </Typography>
+          <CommentInput
+            onSubmit={(content) => handleSubmit(content, null)}
+            isSubmitting={isSubmitting && !activeReplyId}
+          />
+        </>
+      ) : (
+        <Typography className="text-center text-foreground/70">
+          You must be logged in to comment.
+        </Typography>
+      )}
     </div>
   );
 }

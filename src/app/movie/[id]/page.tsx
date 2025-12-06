@@ -1,7 +1,7 @@
 import { httpClient } from "~/api";
 import { MovieModel } from "~/types/movie";
-import { CommentModel } from "~/types/comment";
 import { MovieDetailContent } from "./MovieDetailContent";
+import { CommentModel } from "~/types/comment";
 import { notFound } from "next/navigation";
 
 interface MovieDetailPageProps {
@@ -15,18 +15,16 @@ export default async function MovieDetailPage({ params }: MovieDetailPageProps) 
 
   try {
     const movieResponse = await httpClient.get<MovieModel>(`/api/movie/${id}`);
-    const movie = movieResponse.data;
+    const commentsResponse = await httpClient.get<CommentModel[]>(
+      `/api/movie/${id}/comment`
+    );
 
-    // Try to fetch comments, but don't fail if endpoint doesn't exist
-    let comments: CommentModel[] = []; 
-    try {
-      const commentsResponse = await httpClient.get<CommentModel[]>(`/api/movie/${id}/comment`);
-      comments = commentsResponse.data;
-    } catch (commentError) {
-      console.log("Comments endpoint not available, using empty array");
-    }
-
-    return <MovieDetailContent movie={movie} comments={comments} />;
+    return (
+      <MovieDetailContent
+        movie={movieResponse.data}
+        comments={commentsResponse.data}
+      />
+    );
   } catch (error) {
     console.error("Error fetching movie details:", error);
     notFound();

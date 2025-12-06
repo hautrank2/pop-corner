@@ -8,6 +8,8 @@ export interface CommentModel {
   id: string;
   author: Author;
   content: string;
+  parentId: string | null;
   createdAt: string;
+  updatedAt: string;
   replies: CommentModel[];
 }
