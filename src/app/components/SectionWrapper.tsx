@@ -24,16 +24,18 @@ export const SectionWrapper = ({
 
 export type SectionHeaderProps = {
   title: string;
+  extra?: ReactNode;
 };
-export const SectionHeader = ({ title }: SectionHeaderProps) => {
+export const SectionHeader = ({ title, extra }: SectionHeaderProps) => {
   return (
-    <div className="section-header">
+    <div className="section-header flex justify-between items-center">
       <Typography
         variant={"h3"}
         className="text-primary w-fit min-w-[400px] border-b-2 border-primary pb-2"
       >
         {title}
       </Typography>
+      {extra}
     </div>
   );
 };

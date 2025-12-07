@@ -2,12 +2,14 @@ export type TableResponse<T> = {
   items: T[];
   pageSize: number;
   page: number;
-  count: number;
+  total: number;
+  totalPage: number;
 };
 
 export const TableResponseBase = {
   items: [],
-  count: 0,
+  total: 0,
+  totalPage: 0,
   pageSize: 0,
   page: 0,
 };
