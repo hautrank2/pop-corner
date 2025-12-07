@@ -30,6 +30,7 @@ export const createHttpClient = (
     // chỉ set baseURL nếu có
     ...(baseURL ? { baseURL } : {}),
     timeout: 10000,
+    withCredentials: true,
     ...config,
   });
 
@@ -51,4 +52,4 @@ export const httpClient = createHttpClient({
 });
 
 // Internal Next.js API (/api/...)
-export const internalHttpClient = createHttpClient();
+export const internalHttpClient = createHttpClient({ baseURL: "" });

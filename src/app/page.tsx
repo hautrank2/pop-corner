@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { httpClient } from "~/api";
 import { ArtistModel } from "~/types/artist";
 import { GenreModel } from "~/types/genre";
@@ -13,27 +14,26 @@ import { MovieTopRatedSection } from "./components/MovieTopRatedSection";
 import { GenreSection } from "./components/GenreSection";
 import { ActorSection } from "./components/ActorSection";
 import { AppFooter } from "~/components/layouts/footer";
-import Link from "next/link";
 
 export default async function Home() {
   try {
-    const movieQuery = await httpClient.get<TableResponse<MovieModel>>(
-      "/api/movie"
-    );
-    const genreQuery = await httpClient.get<GenreModel[]>("/api/genre");
-    const artisQuery = await httpClient.get<TableResponse<ArtistModel>>(
-      "/api/artist"
-    );
+    const [moviesRes, genresRes, actorsRes] = await Promise.all([
+      httpClient.get<TableResponse<MovieModel>>("/api/movie"),
+      httpClient.get<GenreModel[]>("/api/genre"),
+      httpClient.get<TableResponse<ArtistModel>>("/api/artist"),
+    ]);
 
-    const trendingMovies = movieQuery.data.items.sort(
-      (a, b) => b.view - a.view
-    );
+    const movies = moviesRes.data.items;
+    const genres = genresRes.data;
+    const actors = actorsRes.data.items;
 
-    const topRatedMovies = movieQuery.data.items
+    const trendingMovies = movies.sort((a, b) => b.view - a.view);
+
+    const topRatedMovies = movies
       .sort((a, b) => b.avgRating - a.avgRating)
       .slice(0, 6);
 
-    const featuredActors = artisQuery.data.items.slice(0, 10);
+    const featuredActors = actors.slice(0, 10);
 
     return (
       <div className="home-page pt-2">
@@ -64,7 +64,7 @@ export default async function Home() {
         <SectionWrapper>
           <SectionHeader title="Movie genres" />
           <SectionContent>
-            <GenreSection data={genreQuery.data} />
+            <GenreSection data={genres} />
           </SectionContent>
         </SectionWrapper>
 
@@ -74,7 +74,6 @@ export default async function Home() {
             <ActorSection data={featuredActors} />
           </SectionContent>
         </SectionWrapper>
-
         <AppFooter />
       </div>
     );
@@ -82,5 +81,5 @@ export default async function Home() {
     console.log(err);
   }
 
-  return <div></div>;
+  return <div>Page error</div>;
 }
