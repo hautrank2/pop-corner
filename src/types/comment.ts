@@ -1,7 +1,15 @@
-export type CommentModel = {
+export interface Author {
   id: string;
-  userId: string;
-  movieId: string;
+  name: string;
+  avatarUrl: string;
+}
+
+export interface CommentModel {
+  id: string;
+  author: Author;
   content: string;
+  parentId: string | null;
   createdAt: string;
-};
+  updatedAt: string;
+  replies: CommentModel[];
+}

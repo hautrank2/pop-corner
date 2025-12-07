@@ -30,6 +30,7 @@ export const createHttpClient = (
     // chỉ set baseURL nếu có
     ...(baseURL ? { baseURL } : {}),
     timeout: 10000,
+    withCredentials: true,
     ...config,
   });
 

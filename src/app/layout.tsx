@@ -33,9 +33,10 @@ export default function RootLayout({
       >
         <AllProviders>
           <AppHeader />
-        </AllProviders>
+        
         <Toaster />
         {children}
+        </AllProviders>
       </body>
     </html>
   );
