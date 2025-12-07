@@ -9,6 +9,7 @@ import { httpClient, internalHttpClient } from "~/api";
 import { UserModel } from "~/types/user";
 import { toast } from "sonner";
 import { SESSION_USER_LOCAL } from "~/lib/session";
+import { Spin } from "~/components/ui/spin";
 
 const ProfilePage = () => {
   return (
@@ -24,7 +25,11 @@ const _ProfilePage = () => {
   const userId = _userData?.id;
   const logined = !!userId;
 
-  const { data: userData, refetch } = useQuery({
+  const {
+    data: userData,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["user", userId],
     queryFn: () =>
       httpClient
@@ -35,24 +40,29 @@ const _ProfilePage = () => {
 
   const mutation = useMutation({
     mutationKey: ["user", "update", userId],
-    mutationFn: (data: ProfileFormValues) =>
-      httpClient.put<UserModel>(`/api/user/${userId}`, {
-        name: data.name,
-        birthday: data.birthday,
-      }),
+    mutationFn: (data: FormData) =>
+      httpClient.put<UserModel>(`/api/user/${userId}`, data),
     onError: () => {
       toast.error("Update user failed");
-    },
-    onSuccess: () => {
-      refetch();
     },
   });
 
   const handleSubmit = useCallback(async (values: ProfileFormValues) => {
-    const res = await mutation.mutateAsync(values);
+    const data = new FormData();
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) {
+        data.append(key, value);
+      }
+    });
+    const res = await mutation.mutateAsync(data);
     const userData = res.data;
     await internalHttpClient.put(`/api/cookie/${SESSION_USER_LOCAL}`, userData);
+    window.location.reload();
   }, []);
+
+  if (!userData || isFetching) {
+    return <Spin />;
+  }
 
   if (!userData) {
     return <Page404 />;
@@ -60,7 +70,11 @@ const _ProfilePage = () => {
 
   return (
     <div className="profile-page mx-auto container pt-8">
-      <ProfileCard userData={userData} onSubmit={handleSubmit} />
+      <ProfileCard
+        userData={userData}
+        onSubmit={handleSubmit}
+        loading={mutation.isPending}
+      />
     </div>
   );
 };

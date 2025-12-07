@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Avatar } from "~/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -44,7 +44,6 @@ export const UserAvatar = ({}: UserAvatarProps) => {
                 className="object-cover"
               />
             )}
-            <AvatarFallback>{data.name}</AvatarFallback>
           </Avatar>
 
           <span className="font-medium">{data.name}</span>

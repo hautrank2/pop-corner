@@ -8,11 +8,11 @@ import {
   SectionContent,
   SectionHeader,
   SectionWrapper,
-} from "./components/SectionWrapper";
-import { MovieTrendingSection } from "./components/MovieTrendingSection";
-import { MovieTopRatedSection } from "./components/MovieTopRatedSection";
-import { GenreSection } from "./components/GenreSection";
-import { ActorSection } from "./components/ActorSection";
+} from "./_components/SectionWrapper";
+import { MovieTrendingSection } from "./_components/MovieTrendingSection";
+import { MovieTopRatedSection } from "./_components/MovieTopRatedSection";
+import { GenreSection } from "./_components/GenreSection";
+import { ActorSection } from "./_components/ActorSection";
 import { AppFooter } from "~/components/layouts/footer";
 
 export default async function Home() {

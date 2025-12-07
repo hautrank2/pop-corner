@@ -1,9 +1,11 @@
 import axios, {
   AxiosError,
+  InternalAxiosRequestConfig,
   type AxiosInstance,
   type AxiosRequestConfig,
   type AxiosResponse,
 } from "axios";
+import { getSessionData } from "~/lib/session";
 
 export interface HttpError extends AxiosError {
   _retry?: boolean;
@@ -34,13 +36,42 @@ export const createHttpClient = (
     ...config,
   });
 
-  instance.interceptors.response.use(
-    (response: AxiosResponse) => response,
-    async (error: HttpError) => {
-      return Promise.reject(error);
+  // Request interceptor: get token
+  instance.interceptors.request.use(
+    (requestConfig: InternalAxiosRequestConfig) => {
+      const sessionData = getSessionData();
+
+      console.log(sessionData);
+      if (sessionData?.token) {
+        requestConfig.headers.set(
+          "Authorization",
+          `Bearer ${sessionData.token}`
+        );
+      } else {
+        // nếu muốn, có thể xóa header khi không còn token
+        if (requestConfig.headers?.Authorization) {
+          delete requestConfig.headers.Authorization;
+        }
+      }
+
+      return requestConfig;
     }
   );
 
+  // Response interceptor: xử lý lỗi chung
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => response,
+    async (error: HttpError) => {
+      // Ví dụ: nếu token hết hạn
+      if (error.response?.status === 401) {
+        // TODO: clear session, redirect /login, v.v.
+        // clearSession();
+        // router.push("/login");
+      }
+
+      return Promise.reject(error);
+    }
+  );
   return instance;
 };
 

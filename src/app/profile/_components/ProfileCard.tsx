@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UserModel } from "~/types/user";
@@ -10,7 +10,6 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "~/components/ui/card";
 import { getAssetUrl } from "~/utils/asset";
 import { formatDateTime } from "~/utils/datetime";
@@ -28,10 +27,26 @@ import {
 } from "~/components/ui/form";
 import { DatePicker } from "~/components/ui/date-picker";
 
+const MAX_FILE_SIZE = 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+
 export const ProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
   birthday: z.string().min(1, "Birthday is required"),
-  avatarUrl: z.string().optional(), // sẽ đổi khi upload
+  avatar: z
+    .instanceof(File)
+    .refine((file) => file.size <= MAX_FILE_SIZE, "Max file size is 1MB")
+    .refine(
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+      "Only image files are allowed"
+    )
+    .optional()
+    .nullable(),
 });
 
 export type ProfileFormValues = z.infer<typeof ProfileSchema>;
@@ -39,17 +54,21 @@ export type ProfileFormValues = z.infer<typeof ProfileSchema>;
 export type ProfileCardProps = {
   userData: UserModel;
   onSubmit: (values: ProfileFormValues) => void;
+  loading?: boolean;
 };
-export const ProfileCard = ({ userData, onSubmit }: ProfileCardProps) => {
+export const ProfileCard = ({
+  userData,
+  onSubmit,
+  loading,
+}: ProfileCardProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [avatar, setAvatar] = useState<string>(userData.avatarUrl);
+  const [avatar, setAvatar] = useState<string>(getAssetUrl(userData.avatarUrl));
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileSchema),
     defaultValues: {
       name: userData.name,
       birthday: userData.birthday,
-      avatarUrl: userData.avatarUrl,
     },
   });
 
@@ -60,26 +79,23 @@ export const ProfileCard = ({ userData, onSubmit }: ProfileCardProps) => {
   const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // TODO: Upload file to API (Cloudinary/S3/Your API)
-    // const avatarUrl = await uploadAvatar(file);
-
-    const avatarUrl = URL.createObjectURL(file); // temp preview
+    const avatarUrl = URL.createObjectURL(file);
 
     setAvatar(avatarUrl);
-    form.setValue("avatarUrl", avatarUrl);
-
-    // TODO: Call API to update avatar only
-    // await axios.post('/api/profile/avatar', file)
+    form.setValue("avatar", file);
   };
+
+  useEffect(() => {
+    console.log(form.formState.errors);
+  }, [form.formState.errors]);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
-        <div className="relative cursor-pointer" onClick={handleAvatarClick}>
+        <div className="relative flex items-center gap-4">
           <Avatar className="h-20 w-20">
             <Image
-              src={getAssetUrl(avatar)}
+              src={avatar}
               alt={userData.name}
               fill
               style={{ objectFit: "cover" }}
@@ -87,6 +103,9 @@ export const ProfileCard = ({ userData, onSubmit }: ProfileCardProps) => {
             <AvatarFallback>{userData.name[0]}</AvatarFallback>
           </Avatar>
 
+          <Button onClick={handleAvatarClick} variant={"outline"}>
+            Change avatar
+          </Button>
           <input
             type="file"
             ref={fileInputRef}
@@ -159,7 +178,9 @@ export const ProfileCard = ({ userData, onSubmit }: ProfileCardProps) => {
           </CardContent>
 
           <CardFooter className="mt-4">
-            <Button type="submit">Save</Button>
+            <Button type="submit" disabled={loading}>
+              Save
+            </Button>
           </CardFooter>
         </form>
       </Form>
