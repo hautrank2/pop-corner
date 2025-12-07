@@ -12,18 +12,21 @@ interface CommentCardProps {
   comment: CommentModel;
   onReplyClick: (commentId: string | null) => void;
   onReplySubmit: (content: string, parentId: string) => void;
-  isReplying: boolean;
   isSubmitting: boolean;
-  activeReplyId?: string | null;
+  // Thay đổi: Bắt buộc truyền activeReplyId để tính toán trạng thái
+  activeReplyId: string | null; 
 }
 
 export function CommentCard({
   comment,
   onReplyClick,
   onReplySubmit,
-  isReplying,
   isSubmitting,
+  activeReplyId,
 }: CommentCardProps) {
+  // Logic: Tự xác định xem mình có đang được reply hay không
+  const isReplying = activeReplyId === comment.id;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
@@ -48,8 +51,10 @@ export function CommentCard({
           <Typography className="text-foreground font-medium leading-relaxed">
             {comment.content}
           </Typography>
+
           <Button
             variant="ghost"
+            // Logic: Nếu đang reply chính nó thì tắt (null), ngược lại thì set ID của nó
             onClick={() => onReplyClick(isReplying ? null : comment.id)}
             className="w-fit gap-2 px-0 text-foreground hover:text-foreground/80 text-sm font-normal"
           >
@@ -70,14 +75,14 @@ export function CommentCard({
 
       {comment.replies?.length > 0 && (
         <div className="pl-16 flex flex-col gap-4 border-l-2 border-gray-700">
-          {comment.replies.map((reply, idx) => (
+          {comment.replies.map((reply) => (
             <CommentCard
-              key={`${reply.id}-${idx}`} // unique key
+              key={reply.id} 
               comment={reply}
               onReplyClick={onReplyClick}
               onReplySubmit={onReplySubmit}
-              isReplying={isReplying && reply.id === reply.id}
               isSubmitting={isSubmitting}
+              activeReplyId={activeReplyId} 
             />
           ))}
         </div>

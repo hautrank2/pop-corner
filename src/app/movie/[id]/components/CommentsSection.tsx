@@ -15,39 +15,45 @@ interface CommentsSectionProps {
   initialComments: CommentModel[];
 }
 
-/** Build nested comment tree from flat array */
 const buildCommentTree = (comments: CommentModel[]): CommentModel[] => {
   const map = new Map<string, CommentModel>();
   const roots: CommentModel[] = [];
 
+  // 1. Khởi tạo map và reset mảng replies để tránh duplicate dữ liệu cũ
   comments.forEach((c) => {
-    c.replies = Array.isArray(c.replies) ? c.replies : [];
-    map.set(c.id, c);
+    // Clone object để không mutate dữ liệu gốc
+    map.set(c.id, { ...c, replies: [] });
   });
 
+  // 2. Xây dựng cây
   comments.forEach((c) => {
-    if (c.parentId) {
+    const node = map.get(c.id);
+    if (!node) return;
+
+    if (c.parentId && map.has(c.parentId)) {
       const parent = map.get(c.parentId);
-      if (parent) parent.replies.push(c);
-      else roots.push(c);
+      parent!.replies!.push(node);
     } else {
-      roots.push(c);
+      roots.push(node);
     }
   });
 
-  // remove duplicate IDs
-  return Array.from(new Map(roots.map((c) => [c.id, c])).values());
+  return roots;
 };
 
 export function CommentsSection({ movieId, initialComments }: CommentsSectionProps) {
   const { status } = useSession();
+  
+  // State quản lý danh sách comment dạng cây
   const [comments, setComments] = useState<CommentModel[]>(() =>
     buildCommentTree(initialComments ?? [])
   );
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Fetch lại comment khi movieId thay đổi
   useEffect(() => {
     let mounted = true;
 
@@ -58,9 +64,9 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
           `/api/movie/${movieId}/comment`
         );
 
-        // res.data phải là CommentModel[]
         const list: CommentModel[] = Array.isArray(res.data) ? res.data : [];
-
+        
+        // Lọc unique ID trước khi build tree
         const uniqueList = Array.from(new Map(list.map((c) => [c.id, c])).values());
 
         if (mounted) setComments(buildCommentTree(uniqueList));
@@ -103,7 +109,9 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
         return;
       }
 
+      // Cập nhật UI ngay lập tức
       if (newComment.parentId) {
+        // Logic đệ quy tìm cha để nhét con vào
         setComments((prev) => {
           const addReply = (list: CommentModel[]): CommentModel[] =>
             list.map((c) => {
@@ -117,8 +125,10 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
             });
           return addReply(prev);
         });
+        // Đóng form reply sau khi submit thành công
         setActiveReplyId(null);
       } else {
+        // Comment gốc thì thêm lên đầu
         setComments((prev) => [{ ...newComment, replies: [] }, ...prev]);
       }
 
@@ -146,14 +156,14 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
         ) : comments.length === 0 ? (
           <Typography>No comments yet. Be the first!</Typography>
         ) : (
-          comments.map((c, idx) => (
+          comments.map((c) => (
             <CommentCard
-              key={`${c.id}-${idx}`}
+              key={c.id} 
               comment={c}
               onReplyClick={setActiveReplyId}
               onReplySubmit={handleSubmit}
-              isReplying={activeReplyId === c.id}
-              isSubmitting={isSubmitting && activeReplyId === c.id}
+              activeReplyId={activeReplyId}
+              isSubmitting={isSubmitting}
             />
           ))
         )}
