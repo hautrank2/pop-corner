@@ -27,7 +27,7 @@ import {
 } from "~/components/ui/form";
 import { DatePicker } from "~/components/ui/date-picker";
 
-const MAX_FILE_SIZE = 1024 * 1024;
+const MAX_FILE_SIZE = 1024 * 1024 * 4;
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/jpg",

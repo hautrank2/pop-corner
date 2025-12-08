@@ -56,6 +56,9 @@ export const UserAvatar = ({}: UserAvatarProps) => {
         <DropdownMenuItem>
           <Link href={"/profile"}>Profile</Link>
         </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">
+          <Link href={getPath().password}>Change password</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => {

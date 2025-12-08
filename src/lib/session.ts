@@ -37,11 +37,9 @@ export const getCookie = (name: string) => {
 };
 
 export const getSessionData = () => {
-  console.log(Cookie.get(SESSION_USER_LOCAL));
   const userData = parseJsonObject(getCookie(SESSION_USER_LOCAL), {});
   const token = getCookie(SESSION_TOKEN_LOCAL);
 
-  console.log(userData, token);
   if (validUserData(userData) && !!token) {
     return { userData, token };
   }

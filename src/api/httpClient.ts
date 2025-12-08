@@ -41,7 +41,6 @@ export const createHttpClient = (
     (requestConfig: InternalAxiosRequestConfig) => {
       const sessionData = getSessionData();
 
-      console.log(sessionData);
       if (sessionData?.token) {
         requestConfig.headers.set(
           "Authorization",
