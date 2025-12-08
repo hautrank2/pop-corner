@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { httpClient } from "~/api";
+import { useApp } from "~/providers";
+import { internalHttpClient } from "~/api";
 import { CommentModel } from "~/types/comment";
 import { CommentCard } from "./CommentCard";
 import { CommentInput } from "./CommentInput";
@@ -42,7 +42,8 @@ const buildCommentTree = (comments: CommentModel[]): CommentModel[] => {
 };
 
 export function CommentsSection({ movieId, initialComments }: CommentsSectionProps) {
-  const { status } = useSession();
+  const { state } = useApp();
+  const isAuthenticated = !!state.session?.userData;
   
   // State quản lý danh sách comment dạng cây
   const [comments, setComments] = useState<CommentModel[]>(() =>
@@ -60,11 +61,16 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
     const fetchComments = async () => {
       setIsRefreshing(true);
       try {
-        const res = await httpClient.get<CommentModel[]>(
+        const res = await internalHttpClient.get<CommentModel[]>(
           `/api/movie/${movieId}/comment`
         );
 
         const list: CommentModel[] = Array.isArray(res.data) ? res.data : [];
+        
+        // Debug: Log để kiểm tra cấu trúc dữ liệu
+        if (list.length > 0) {
+          console.log("Sample comment data:", list[0]);
+        }
         
         // Lọc unique ID trước khi build tree
         const uniqueList = Array.from(new Map(list.map((c) => [c.id, c])).values());
@@ -88,7 +94,7 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
   const handleSubmit = async (content: string, parentId: string | null = null) => {
     if (!content?.trim()) return;
 
-    if (status !== "authenticated") {
+    if (!isAuthenticated) {
       toast.error("You must be logged in to comment.");
       return;
     }
@@ -96,7 +102,7 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
     setIsSubmitting(true);
 
     try {
-      const res = await httpClient.post<CommentModel>(
+      const res = await internalHttpClient.post<CommentModel>(
         `/api/movie/${movieId}/comment`,
         { content, parentId }
       );
@@ -169,7 +175,7 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
         )}
       </div>
 
-      {status === "authenticated" ? (
+      {isAuthenticated ? (
         <>
           <Typography variant="h4" className="mb-4 font-semibold">
             Leave a Comment
