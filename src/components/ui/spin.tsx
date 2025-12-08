@@ -20,7 +20,7 @@ const SIZE_STYLES = {
   xl: { box: "h-10 w-10", border: "border-[5px]", text: "text-lg" },
 } as const;
 
-export function Spin({ className, size = "md", text }: SpinProps) {
+export const Spin = ({ className, size = "md", text }: SpinProps) => {
   const isNumber = typeof size === "number";
 
   // When size is numeric, we style width/height/borderWidth inline.
@@ -70,6 +70,4 @@ export function Spin({ className, size = "md", text }: SpinProps) {
       )}
     </div>
   );
-}
-
-export default Spin;
+};
