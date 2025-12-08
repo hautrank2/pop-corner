@@ -102,9 +102,15 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
     setIsSubmitting(true);
 
     try {
+      // Chỉ gửi parentId nếu có giá trị (không gửi null)
+      const payload: { content: string; parentId?: string } = { content: content.trim() };
+      if (parentId) {
+        payload.parentId = parentId;
+      }
+      
       const res = await internalHttpClient.post<CommentModel>(
         `/api/movie/${movieId}/comment`,
-        { content, parentId }
+        payload
       );
 
       const newComment: CommentModel | null =
@@ -148,48 +154,61 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
   };
 
   return (
-    <div className="px-16 py-8">
-      <div className="flex flex-col gap-2 mb-8">
-        <Typography variant="h3" className="text-neon-pink font-semibold">
-          Comments
-        </Typography>
-        <Separator className="bg-neon-pink h-0.5 w-[360px]" />
-      </div>
-
-      <div className="flex flex-col gap-6 mb-8">
-        {isRefreshing && comments.length === 0 ? (
-          <Typography>Loading comments...</Typography>
-        ) : comments.length === 0 ? (
-          <Typography>No comments yet. Be the first!</Typography>
-        ) : (
-          comments.map((c) => (
-            <CommentCard
-              key={c.id} 
-              comment={c}
-              onReplyClick={setActiveReplyId}
-              onReplySubmit={handleSubmit}
-              activeReplyId={activeReplyId}
-              isSubmitting={isSubmitting}
-            />
-          ))
-        )}
-      </div>
-
-      {isAuthenticated ? (
-        <>
-          <Typography variant="h4" className="mb-4 font-semibold">
-            Leave a Comment
+    <div className="px-16 py-8 flex flex-col h-full">
+      {/* Background xám nhạt bọc cả header, comment và post comment */}
+      <div className="bg-gray-100/30 dark:bg-gray-800/30 rounded-lg p-6 flex flex-col h-full">
+        {/* Header Comments */}
+        <div className="flex flex-col gap-2 mb-6">
+          <Typography variant="h3" className="text-neon-pink font-semibold">
+            Comments
           </Typography>
-          <CommentInput
-            onSubmit={(content) => handleSubmit(content, null)}
-            isSubmitting={isSubmitting && !activeReplyId}
-          />
-        </>
-      ) : (
-        <Typography className="text-center text-foreground/70">
-          You must be logged in to comment.
-        </Typography>
-      )}
+          <Separator className="bg-neon-pink h-0.5 w-[360px]" />
+        </div>
+
+        {/* Phần comment có thể scroll */}
+        <div className="flex-1 overflow-y-auto mb-6 max-h-[600px]">
+          <div className="flex flex-col gap-6">
+            {isRefreshing && comments.length === 0 ? (
+              <Typography>Loading comments...</Typography>
+            ) : comments.length === 0 ? (
+              <Typography className="text-center text-foreground/70">
+                No comments yet. Be the first!
+              </Typography>
+            ) : (
+              comments.map((c) => (
+                <CommentCard
+                  key={c.id} 
+                  comment={c}
+                  onReplyClick={setActiveReplyId}
+                  onReplySubmit={handleSubmit}
+                  activeReplyId={activeReplyId}
+                  isSubmitting={isSubmitting}
+                  depth={0}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Phần post comment giữ nguyên, không scroll */}
+        <div className="flex-shrink-0 border-t border-gray-300/50 dark:border-gray-700/50 pt-6">
+          {isAuthenticated ? (
+            <>
+              <Typography variant="h4" className="mb-4 font-semibold">
+                Leave a Comment
+              </Typography>
+              <CommentInput
+                onSubmit={(content) => handleSubmit(content, null)}
+                isSubmitting={isSubmitting && !activeReplyId}
+              />
+            </>
+          ) : (
+            <Typography className="text-center text-foreground/70">
+              You must be logged in to comment.
+            </Typography>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
