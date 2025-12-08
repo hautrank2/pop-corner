@@ -8,6 +8,7 @@ import { Typography } from "~/components/ui/typography";
 import { formatRelativeTime } from "~/utils/time";
 import { getAssetUrl } from "~/utils/asset";
 import { CommentInput } from "./CommentInput";
+import Image from "next/image";
 
 interface CommentCardProps {
   comment: CommentModel;
@@ -36,8 +37,10 @@ export function CommentCard({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
-        <Avatar className="h-12 w-12 border-2 border-white">
-          <AvatarImage
+        <div className="w-12 h-12 rounded-full overflow-hidden relative">
+          <Image
+          className="rounded-full object-cover"
+            fill
             src={
               authorAvatarUrl
                 ? getAssetUrl(authorAvatarUrl)
@@ -45,10 +48,8 @@ export function CommentCard({
             }
             alt={authorName || "User"}
           />
-          <AvatarFallback>
-            {authorName?.charAt(0) ?? "U"}
-          </AvatarFallback>
-        </Avatar>
+        </div>
+        
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <Typography variant="h5" className="text-foreground font-semibold">
