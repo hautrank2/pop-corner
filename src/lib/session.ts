@@ -1,7 +1,6 @@
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { UserModel } from "~/types/user";
 import { parseJsonObject } from "~/utils/json";
-import Cookie from "js-cookie";
 
 export const SESSION_MAX_AGE = 1 * 60 * 60 * 1000;
 export const SESSION_TOKEN_LOCAL = "auth_token";
@@ -32,8 +31,17 @@ export const handleAfterLogin = (
   });
 };
 
-export const getCookie = (name: string) => {
-  return Cookie.get(name);
+export const getCookie = (name: string): string | undefined => {
+  // Chỉ chạy ở client-side
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  // Sử dụng document.cookie trực tiếp thay vì js-cookie để tránh dependency issues
+  const match = document.cookie.match(
+    new RegExp("(^| )" + name + "=([^;]+)")
+  );
+  return match ? decodeURIComponent(match[2]) : undefined;
 };
 
 export const getSessionData = () => {

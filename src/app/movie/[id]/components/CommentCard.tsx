@@ -16,7 +16,9 @@ interface CommentCardProps {
   onReplySubmit: (content: string, parentId: string) => void;
   isSubmitting: boolean;
   // Thay đổi: Bắt buộc truyền activeReplyId để tính toán trạng thái
-  activeReplyId: string | null; 
+  activeReplyId: string | null;
+  // Độ sâu của comment trong cây (0 = root, 1 = reply level 1, 2 = reply level 2)
+  depth?: number;
 }
 
 export function CommentCard({
@@ -25,6 +27,7 @@ export function CommentCard({
   onReplySubmit,
   isSubmitting,
   activeReplyId,
+  depth = 0,
 }: CommentCardProps) {
   // Logic: Tự xác định xem mình có đang được reply hay không
   const isReplying = activeReplyId === comment.id;
@@ -33,6 +36,9 @@ export function CommentCard({
   const author = (comment as any).author || (comment as any).user;
   const authorName = author?.name;
   const authorAvatarUrl = author?.avatarUrl;
+
+  // Giới hạn 3 cấp: chỉ cho phép reply ở cấp 0, 1, 2 (không cho reply ở cấp 3)
+  const canReply = depth < 2;
 
   return (
     <div className="flex flex-col gap-4">
@@ -59,19 +65,21 @@ export function CommentCard({
               {formatRelativeTime(comment.createdAt)}
             </Typography>
           </div>
-          <Typography className="text-foreground font-medium leading-relaxed">
+          <Typography className="text-foreground font-medium leading-relaxed whitespace-pre-wrap">
             {comment.content}
           </Typography>
 
-          <Button
-            variant="ghost"
-            // Logic: Nếu đang reply chính nó thì tắt (null), ngược lại thì set ID của nó
-            onClick={() => onReplyClick(isReplying ? null : comment.id)}
-            className="w-fit gap-2 px-0 text-foreground hover:text-foreground/80 text-sm font-normal"
-          >
-            <Reply className="h-4 w-4" />
-            {isReplying ? "Cancel" : "Reply"}
-          </Button>
+          {canReply && (
+            <Button
+              variant="ghost"
+              // Logic: Nếu đang reply chính nó thì tắt (null), ngược lại thì set ID của nó
+              onClick={() => onReplyClick(isReplying ? null : comment.id)}
+              className="w-fit gap-2 px-0 text-foreground hover:text-foreground/80 text-sm font-normal"
+            >
+              <Reply className="h-4 w-4" />
+              {isReplying ? "Cancel" : "Reply"}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -80,6 +88,7 @@ export function CommentCard({
           <CommentInput
             onSubmit={(content) => onReplySubmit(content, comment.id)}
             isSubmitting={isSubmitting}
+            mentionName={authorName}
           />
         </div>
       )}
@@ -93,7 +102,8 @@ export function CommentCard({
               onReplyClick={onReplyClick}
               onReplySubmit={onReplySubmit}
               isSubmitting={isSubmitting}
-              activeReplyId={activeReplyId} 
+              activeReplyId={activeReplyId}
+              depth={depth + 1}
             />
           ))}
         </div>
