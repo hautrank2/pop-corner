@@ -25,7 +25,7 @@ import {
 import { PasswordInput } from "~/components/ui/password-input";
 import { AllProviders } from "~/providers";
 import { useMutation } from "@tanstack/react-query";
-import { httpClient, internalHttpClient } from "~/api";
+import { ApiError, httpClient, internalHttpClient } from "~/api";
 import { SESSION_TOKEN_LOCAL, SESSION_USER_LOCAL } from "~/lib/session";
 import { useRouter } from "next/navigation";
 import { getPath } from "~/lib/navigate";
@@ -82,6 +82,13 @@ const _ForgotPasswordPage = () => {
       });
       router.push(getPath().login);
     },
+    onError: (err: ApiError) => {
+      const data = err.response?.data;
+
+      if (typeof data === "string") {
+        toast.error(data);
+      }
+    },
   });
 
   const { handleSubmit, control } = form;
@@ -90,12 +97,7 @@ const _ForgotPasswordPage = () => {
     if (mutation.isPending) return;
     setServerError(null);
     setServerSuccess(null);
-
-    try {
-      await mutation.mutateAsync(values);
-    } catch (err: any) {
-      toast.error("Something went wrong");
-    }
+    mutation.mutate(values);
   };
 
   return (

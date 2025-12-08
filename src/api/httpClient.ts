@@ -23,6 +23,8 @@ type CreateHttpClientOptions = {
   config?: AxiosRequestConfig;
 };
 
+export type ApiError = AxiosError;
+
 export const createHttpClient = (
   options?: CreateHttpClientOptions
 ): AxiosInstance => {

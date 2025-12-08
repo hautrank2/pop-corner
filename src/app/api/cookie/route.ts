@@ -38,7 +38,7 @@ export const GET = async (req: Request) => {
 export const DELETE = async (req: Request) => {
   try {
     const url = new URL(req.url);
-    const keysParam = url.searchParams.get("keys");
+    const keysParam = url.searchParams.get("keys[]");
 
     if (!keysParam) {
       return NextResponse.json(
