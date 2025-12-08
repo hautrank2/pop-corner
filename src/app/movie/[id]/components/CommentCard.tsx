@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Typography } from "~/components/ui/typography";
 import { formatRelativeTime } from "~/utils/time";
+import { getAssetUrl } from "~/utils/asset";
 import { CommentInput } from "./CommentInput";
 
 interface CommentCardProps {
@@ -27,22 +28,31 @@ export function CommentCard({
   // Logic: Tự xác định xem mình có đang được reply hay không
   const isReplying = activeReplyId === comment.id;
 
+  // Hỗ trợ cả author và user (nếu API trả về field name khác)
+  const author = (comment as any).author || (comment as any).user;
+  const authorName = author?.name;
+  const authorAvatarUrl = author?.avatarUrl;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
         <Avatar className="h-12 w-12 border-2 border-white">
           <AvatarImage
-            src={comment.author?.avatarUrl || "/default-avatar.png"}
-            alt={comment.author?.name || "User"}
+            src={
+              authorAvatarUrl
+                ? getAssetUrl(authorAvatarUrl)
+                : "/images/user-avatar-default.jpg"
+            }
+            alt={authorName || "User"}
           />
           <AvatarFallback>
-            {comment.author?.name?.charAt(0) ?? "U"}
+            {authorName?.charAt(0) ?? "U"}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <Typography variant="h5" className="text-foreground font-semibold">
-              {comment.author?.name ?? "Unknown"}
+              {authorName ?? "Unknown"}
             </Typography>
             <Typography className="text-foreground/60 text-sm font-normal">
               {formatRelativeTime(comment.createdAt)}
