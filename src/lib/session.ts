@@ -38,8 +38,9 @@ export const getCookie = (name: string): string | undefined => {
   }
 
   // Sử dụng document.cookie trực tiếp thay vì js-cookie để tránh dependency issues
+  // Cải thiện regex để match chính xác hơn, bao gồm cả trường hợp cookie ở đầu hoặc giữa chuỗi
   const match = document.cookie.match(
-    new RegExp("(^| )" + name + "=([^;]+)")
+    new RegExp("(^|;\\s*)" + name + "=([^;]+)")
   );
   return match ? decodeURIComponent(match[2]) : undefined;
 };

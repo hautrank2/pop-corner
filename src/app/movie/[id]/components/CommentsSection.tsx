@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useApp } from "~/providers";
-import { internalHttpClient } from "~/api";
+import { httpClient } from "~/api";
 import { CommentModel } from "~/types/comment";
 import { CommentCard } from "./CommentCard";
 import { CommentInput } from "./CommentInput";
@@ -53,43 +53,29 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
 
-  // Fetch lại comment khi movieId thay đổi
-  useEffect(() => {
-    let mounted = true;
+  // Fetch lại comments từ server
+  const fetchComments = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await httpClient.get<CommentModel[]>(
+        `/api/movie/${movieId}/comment`
+      );
 
-    const fetchComments = async () => {
-      setIsRefreshing(true);
-      try {
-        const res = await internalHttpClient.get<CommentModel[]>(
-          `/api/movie/${movieId}/comment`
-        );
+      const list: CommentModel[] = Array.isArray(res.data) ? res.data : [];
+      
+      // Lọc unique ID trước khi build tree
+      const uniqueList = Array.from(new Map(list.map((c) => [c.id, c])).values());
 
-        const list: CommentModel[] = Array.isArray(res.data) ? res.data : [];
-        
-        // Debug: Log để kiểm tra cấu trúc dữ liệu
-        if (list.length > 0) {
-          console.log("Sample comment data:", list[0]);
-        }
-        
-        // Lọc unique ID trước khi build tree
-        const uniqueList = Array.from(new Map(list.map((c) => [c.id, c])).values());
-
-        if (mounted) setComments(buildCommentTree(uniqueList));
-      } catch (err) {
-        console.error("fetchComments error:", err);
-        toast.error("Could not load comments.");
-      } finally {
-        if (mounted) setIsRefreshing(false);
-      }
-    };
-
-    fetchComments();
-
-    return () => {
-      mounted = false;
-    };
-  }, [movieId]);
+      setComments(buildCommentTree(uniqueList));
+    } catch (err) {
+      console.error("fetchComments error:", err);
+      toast.error("Could not load comments.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleSubmit = async (content: string, parentId: string | null = null) => {
     if (!content?.trim()) return;
@@ -108,7 +94,7 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
         payload.parentId = parentId;
       }
       
-      const res = await internalHttpClient.post<CommentModel>(
+      const res = await httpClient.post<CommentModel>(
         `/api/movie/${movieId}/comment`,
         payload
       );
@@ -121,33 +107,91 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
         return;
       }
 
-      // Cập nhật UI ngay lập tức
-      if (newComment.parentId) {
-        // Logic đệ quy tìm cha để nhét con vào
-        setComments((prev) => {
-          const addReply = (list: CommentModel[]): CommentModel[] =>
-            list.map((c) => {
-              if (c.id === newComment.parentId) {
-                return { ...c, replies: [...(c.replies ?? []), newComment] };
-              }
-              if (c.replies?.length) {
-                return { ...c, replies: addReply(c.replies) };
-              }
-              return c;
-            });
-          return addReply(prev);
-        });
-        // Đóng form reply sau khi submit thành công
+      // Refetch comments để sync với server
+      await fetchComments();
+      
+      // Đóng form reply sau khi submit thành công
+      if (parentId) {
         setActiveReplyId(null);
-      } else {
-        // Comment gốc thì thêm lên đầu
-        setComments((prev) => [{ ...newComment, replies: [] }, ...prev]);
       }
 
       toast.success("Comment posted!");
-    } catch (err) {
+    } catch (err: any) {
       console.error("post comment error:", err);
-      toast.error("Failed to post comment.");
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      
+      // Hiển thị thông báo lỗi chi tiết hơn
+      const errorMessage = err.response?.data?.message || err.message || "Failed to post comment.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdate = async (commentId: string, content: string) => {
+    if (!content?.trim()) return;
+
+    if (!isAuthenticated) {
+      toast.error("You must be logged in to update comments.");
+      return;
+    }
+    console.log("commentId", commentId);
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await httpClient.put<CommentModel>(
+        `/api/movie/${movieId}/comment/${commentId}`,
+        { content: content.trim() }
+      );
+
+      const updatedComment: CommentModel | null =
+        res.data && typeof res.data === "object" ? res.data : null;
+
+      if (!updatedComment) {
+        toast.error("Unexpected response from server.");
+        return;
+      }
+
+      // Refetch comments để sync với server
+      await fetchComments();
+
+      setEditingCommentId(null);
+      toast.success("Comment updated!");
+    } catch (err: any) {
+      console.error("update comment error:", err);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to update comment.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (commentId: string) => {
+    if (!isAuthenticated) {
+      toast.error("You must be logged in to delete comments.");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this comment?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await httpClient.delete(`/api/movie/${movieId}/comment/${commentId}`);
+
+      // Refetch comments để sync với server
+      await fetchComments();
+
+      setEditingCommentId(null);
+      toast.success("Comment deleted!");
+    } catch (err: any) {
+      console.error("delete comment error:", err);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to delete comment.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -181,8 +225,13 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
                   comment={c}
                   onReplyClick={setActiveReplyId}
                   onReplySubmit={handleSubmit}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
                   activeReplyId={activeReplyId}
+                  editingCommentId={editingCommentId}
+                  onEditClick={setEditingCommentId}
                   isSubmitting={isSubmitting}
+                  currentUserId={state.session?.userData?.id}
                   depth={0}
                 />
               ))

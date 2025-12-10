@@ -35,6 +35,7 @@ export const createHttpClient = (
     ...(baseURL ? { baseURL } : {}),
     timeout: 10000,
     withCredentials: true,
+    maxRedirects: 0, // Không follow redirect để đảm bảo request đi qua Next.js API route
     ...config,
   });
 
@@ -48,10 +49,25 @@ export const createHttpClient = (
           "Authorization",
           `Bearer ${sessionData.token}`
         );
+        // Debug log (chỉ log trong dev)
+        if (process.env.NODE_ENV === "development") {
+          console.log("[httpClient] Request with token:", {
+            url: requestConfig.url,
+            method: requestConfig.method,
+            hasToken: !!sessionData.token,
+          });
+        }
       } else {
         // nếu muốn, có thể xóa header khi không còn token
         if (requestConfig.headers?.Authorization) {
           delete requestConfig.headers.Authorization;
+        }
+        // Debug log
+        if (process.env.NODE_ENV === "development") {
+          console.warn("[httpClient] Request without token:", {
+            url: requestConfig.url,
+            method: requestConfig.method,
+          });
         }
       }
 
@@ -84,4 +100,4 @@ export const httpClient = createHttpClient({
 });
 
 // Internal Next.js API (/api/...)
-export const internalHttpClient = createHttpClient({ baseURL: "" });
+export const internalHttpClient = createHttpClient({ baseURL: undefined });
