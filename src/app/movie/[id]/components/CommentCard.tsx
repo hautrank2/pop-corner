@@ -1,6 +1,6 @@
 "use client";
 
-import { Reply } from "lucide-react";
+import { Reply, Edit2, Trash2 } from "lucide-react";
 import { CommentModel } from "~/types/comment";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -14,9 +14,14 @@ interface CommentCardProps {
   comment: CommentModel;
   onReplyClick: (commentId: string | null) => void;
   onReplySubmit: (content: string, parentId: string) => void;
+  onUpdate?: (commentId: string, content: string) => void;
+  onDelete?: (commentId: string) => void;
   isSubmitting: boolean;
   // Thay đổi: Bắt buộc truyền activeReplyId để tính toán trạng thái
   activeReplyId: string | null;
+  editingCommentId?: string | null;
+  onEditClick?: (commentId: string | null) => void;
+  currentUserId?: string;
   // Độ sâu của comment trong cây (0 = root, 1 = reply level 1, 2 = reply level 2)
   depth?: number;
 }
@@ -25,17 +30,27 @@ export function CommentCard({
   comment,
   onReplyClick,
   onReplySubmit,
+  onUpdate,
+  onDelete,
   isSubmitting,
   activeReplyId,
+  editingCommentId,
+  onEditClick,
+  currentUserId,
   depth = 0,
 }: CommentCardProps) {
   // Logic: Tự xác định xem mình có đang được reply hay không
   const isReplying = activeReplyId === comment.id;
+  const isEditing = editingCommentId === comment.id;
 
   // Hỗ trợ cả author và user (nếu API trả về field name khác)
   const author = (comment as any).author || (comment as any).user;
   const authorName = author?.name;
   const authorAvatarUrl = author?.avatarUrl;
+  const authorId = author?.id;
+
+  // Kiểm tra xem user hiện tại có phải là chủ sở hữu comment không
+  const isOwner = currentUserId && authorId && currentUserId === authorId;
 
   // Giới hạn 3 cấp: chỉ cho phép reply ở cấp 0, 1, 2 (không cho reply ở cấp 3)
   const canReply = depth < 2;
@@ -65,20 +80,57 @@ export function CommentCard({
               {formatRelativeTime(comment.createdAt)}
             </Typography>
           </div>
-          <Typography className="text-foreground font-medium leading-relaxed whitespace-pre-wrap">
-            {comment.content}
-          </Typography>
+          {isEditing && onUpdate ? (
+            <div className="flex flex-col gap-2">
+              <CommentInput
+                onSubmit={(content) => onUpdate(comment.id, content)}
+                isSubmitting={isSubmitting}
+                initialValue={comment.content}
+                onCancel={() => onEditClick?.(null)}
+              />
+            </div>
+          ) : (
+            <>
+              <Typography className="text-foreground font-medium leading-relaxed whitespace-pre-wrap">
+                {comment.content}
+              </Typography>
 
-          {canReply && (
-            <Button
-              variant="ghost"
-              // Logic: Nếu đang reply chính nó thì tắt (null), ngược lại thì set ID của nó
-              onClick={() => onReplyClick(isReplying ? null : comment.id)}
-              className="w-fit gap-2 px-0 text-foreground hover:text-foreground/80 text-sm font-normal"
-            >
-              <Reply className="h-4 w-4" />
-              {isReplying ? "Cancel" : "Reply"}
-            </Button>
+              <div className="flex items-center gap-2">
+                {canReply && (
+                  <Button
+                    variant="ghost"
+                    // Logic: Nếu đang reply chính nó thì tắt (null), ngược lại thì set ID của nó
+                    onClick={() => onReplyClick(isReplying ? null : comment.id)}
+                    className="w-fit gap-2 px-0 text-foreground hover:text-foreground/80 text-sm font-normal"
+                  >
+                    <Reply className="h-4 w-4" />
+                    {isReplying ? "Cancel" : "Reply"}
+                  </Button>
+                )}
+                {isOwner && onUpdate && onDelete && onEditClick && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onEditClick(isEditing ? null : comment.id)}
+                      className="w-fit gap-2 px-0 text-foreground hover:text-foreground/80 text-sm font-normal"
+                      disabled={isSubmitting}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                      {isEditing ? "Cancel" : "Edit"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onDelete(comment.id)}
+                      className="w-fit gap-2 px-0 text-foreground hover:text-red-500 text-sm font-normal"
+                      disabled={isSubmitting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -101,8 +153,13 @@ export function CommentCard({
               comment={reply}
               onReplyClick={onReplyClick}
               onReplySubmit={onReplySubmit}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
               isSubmitting={isSubmitting}
               activeReplyId={activeReplyId}
+              editingCommentId={editingCommentId}
+              onEditClick={onEditClick}
+              currentUserId={currentUserId}
               depth={depth + 1}
             />
           ))}

@@ -3,32 +3,43 @@
 import { useCallback, useState, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input"; // replace with your input component or textarea
-import { Send } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface CommentInputProps {
   onSubmit: (content: string) => void;
   isSubmitting?: boolean;
   placeholder?: string;
-  mentionName?: string; // Tên người được mention khi reply
+  mentionName?: string;
+  initialValue?: string;
+  onCancel?: () => void;
 }
 
 export function CommentInput({ 
   onSubmit, 
   isSubmitting = false, 
   placeholder = "Write a comment...",
-  mentionName 
+  mentionName,
+  initialValue,
+  onCancel
 }: CommentInputProps) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initialValue || "");
 
-  // Khi có mentionName, tự động thêm @mention vào đầu input (chỉ khi input rỗng)
+  // Khi có initialValue, set giá trị ban đầu
   useEffect(() => {
-    if (mentionName) {
+    if (initialValue !== undefined) {
+      setValue(initialValue);
+    }
+  }, [initialValue]);
+
+  // Khi có mentionName, tự động thêm @mention vào đầu input (chỉ khi input rỗng và không có initialValue)
+  useEffect(() => {
+    if (mentionName && !initialValue) {
       setValue(`@${mentionName} `);
-    } else {
+    } else if (!mentionName && !initialValue) {
       setValue("");
     }
-  }, [mentionName]);
+  }, [mentionName, initialValue]);
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent) => {
@@ -65,6 +76,18 @@ export function CommentInput({
       >
         <Send className="h-4 w-4" />
       </Button>
+      {onCancel && (
+        <Button 
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          variant="ghost"
+          size="icon"
+          className="shrink-0"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
     </form>
   );
 }

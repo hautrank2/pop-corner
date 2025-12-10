@@ -65,7 +65,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
         =============================== */}
         <div className="flex flex-col lg:flex-row gap-4">
           {/* POSTER */}
-          <div className="relative lg:w-1/4 md:w-1/3 w-full aspect-[2/3] rounded-lg overflow-hidden">
+          <div className="relative lg:w-1/4 w-full aspect-[2/3] rounded-lg overflow-hidden">
             <Image
               src={getAssetUrl(movie.posterUrl)}
               alt={movie.title}
@@ -75,7 +75,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
             />
 
             {/* Title Overlay */}
-            <div className="absolute bottom-0 left-0 w-full bg-black/60 px-4 py-3">
+            <div className="absolute bottom-0 left-0 w-full bg-black/60 px-4 py-3 bg-gradient-to-r from-black to-black">
               <Typography
                 variant="h2"
                 className="text-neon-pink font-semibold leading-tight"
@@ -119,7 +119,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
         =============================== */}
         <div className="flex flex-col lg:flex-row gap-4">
           {/* INFO PANEL */}
-          <div className="lg:w-1/4 md:w-1/3 w-full bg-panel-bg p-6 rounded-lg flex flex-col gap-4">
+          <div className="lg:w-1/4 w-full bg-panel-bg p-6 rounded-lg flex flex-col gap-4">
             {/* Rating */}
             <div className="flex items-center gap-2">
               <Star className="h-5 w-5 fill-star-gold text-star-gold" />
