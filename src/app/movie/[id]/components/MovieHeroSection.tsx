@@ -19,6 +19,7 @@ import { getAssetUrl } from "~/utils/asset";
 import { formatNumber } from "~/utils/number";
 import { formatDuration } from "~/utils/time";
 import dayjs from "dayjs";
+import { MovieReactions } from "./MovieReactions";
 
 interface MovieHeroSectionProps {
   movie: MovieModel;
@@ -207,6 +208,9 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
                 <MessageSquare className="h-6 w-6 text-white" />
               </Button>
             </div>
+
+            {/* REACTIONS */}
+            <MovieReactions movieId={movie.id} />
           </div>
 
           {/* IMAGE GALLERY */}
