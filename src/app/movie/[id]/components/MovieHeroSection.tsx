@@ -11,6 +11,7 @@ import {
   Share2,
   MessageSquare,
   PlayCircle,
+  ThumbsUp,
 } from "lucide-react";
 import { MovieModel } from "~/types/movie";
 import { Button } from "~/components/ui/button";
@@ -20,6 +21,7 @@ import { formatNumber } from "~/utils/number";
 import { formatDuration } from "~/utils/time";
 import dayjs from "dayjs";
 import { MovieReactions } from "./MovieReactions";
+import { ReactionPicker } from "./ReactionPicker";
 
 interface MovieHeroSectionProps {
   movie: MovieModel;
@@ -29,6 +31,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [reactionKey, setReactionKey] = useState(0);
 
   const galleryImages =
     movie.imgUrls.length > 0
@@ -207,10 +210,25 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
               >
                 <MessageSquare className="h-6 w-6 text-white" />
               </Button>
+              <ReactionPicker
+                movieId={movie.id}
+                onReactionSelected={() => {
+                  // Refresh reactions when a new reaction is posted
+                  setReactionKey((prev) => prev + 1);
+                }}
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
+                >
+                  <ThumbsUp className="h-6 w-6 text-white" />
+                </Button>
+              </ReactionPicker>
             </div>
 
             {/* REACTIONS */}
-            <MovieReactions movieId={movie.id} />
+            <MovieReactions key={reactionKey} movieId={movie.id} />
           </div>
 
           {/* IMAGE GALLERY */}
