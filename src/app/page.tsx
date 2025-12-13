@@ -14,6 +14,8 @@ import { MovieTopRatedSection } from "./_components/MovieTopRatedSection";
 import { GenreSection } from "./_components/GenreSection";
 import { ActorSection } from "./_components/ActorSection";
 import { AppFooter } from "~/components/layouts/footer";
+import { PageError } from "~/components/pages";
+import Script from "next/script";
 
 export default async function Home() {
   try {
@@ -37,13 +39,14 @@ export default async function Home() {
 
     return (
       <div className="home-page pt-2">
-        <SectionWrapper className="mt-0">
+        <SectionWrapper id="trending" className="mt-0">
           <SectionHeader
+            id="trending"
             title="Trending"
             extra={
               <Link
-                href={"/movie"}
-                className="text-secondary hover:underline text-xl"
+                href="/movie"
+                className="text-secondary text-xl hover:underline"
               >
                 Full movies
               </Link>
@@ -54,32 +57,34 @@ export default async function Home() {
           </SectionContent>
         </SectionWrapper>
 
-        <SectionWrapper>
-          <SectionHeader title="Top Rated Movies" />
+        <SectionWrapper id="top-rated">
+          <SectionHeader id="top-rated" title="Top Rated Movies" />
           <SectionContent>
             <MovieTopRatedSection data={topRatedMovies} />
           </SectionContent>
         </SectionWrapper>
 
-        <SectionWrapper>
-          <SectionHeader title="Movie genres" />
+        <SectionWrapper id="genres">
+          <SectionHeader id="genres" title="Movie genres" />
           <SectionContent>
             <GenreSection data={genres} />
           </SectionContent>
         </SectionWrapper>
 
-        <SectionWrapper>
-          <SectionHeader title="Featured actors" />
+        <SectionWrapper id="actors">
+          <SectionHeader id="actors" title="Featured actors" />
           <SectionContent>
             <ActorSection data={featuredActors} />
           </SectionContent>
         </SectionWrapper>
+
         <AppFooter />
+        <Script id="homeScript" strategy="afterInteractive" src="/js/app.js" />
       </div>
     );
   } catch (err) {
     console.log(err);
   }
 
-  return <div>Page error</div>;
+  return <PageError />;
 }

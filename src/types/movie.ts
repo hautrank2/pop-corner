@@ -29,3 +29,7 @@ export type MovieModel = {
   genreIds: string[];
   genres: GenreModel[];
 };
+
+export type MovieQueryModel = {
+  genreId?: number;
+};
