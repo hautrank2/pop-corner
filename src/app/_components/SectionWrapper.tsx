@@ -20,7 +20,6 @@ export const SectionWrapper = ({
       id={id}
       className={cn(
         "section-wrapper max-w-[1754px] mx-auto px-4 md:px-16 mt-16",
-        "opacity-0", // use with app.js
         className
       )}
     >
