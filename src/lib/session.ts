@@ -2,11 +2,12 @@ import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adap
 import { UserModel } from "~/types/user";
 import { parseJsonObject } from "~/utils/json";
 
-export const SESSION_MAX_AGE = 1 * 60 * 60 * 1000;
+export const SESSION_MAX_AGE = 24 * 60 * 60; // 1day
 export const SESSION_TOKEN_LOCAL = "auth_token";
 export const SESSION_USER_LOCAL = "auth_user_data";
-export const createSession = (user: UserModel) => {
+export const createSession = () => {
   const expiresAt = new Date(Date.now() + SESSION_MAX_AGE);
+  return expiresAt;
 };
 
 export const handleAfterLogin = (
@@ -15,11 +16,11 @@ export const handleAfterLogin = (
   userData: UserModel
 ) => {
   cookie.set(SESSION_TOKEN_LOCAL, token, {
-    httpOnly: false, // true if more secure
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_MAX_AGE, // 1 ngày
+    maxAge: SESSION_MAX_AGE,
   });
 
   cookie.set(SESSION_USER_LOCAL, JSON.stringify(userData), {
@@ -27,18 +28,15 @@ export const handleAfterLogin = (
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_MAX_AGE, // 1 ngày
+    maxAge: SESSION_MAX_AGE,
   });
 };
 
 export const getCookie = (name: string): string | undefined => {
-  // Chỉ chạy ở client-side
   if (typeof window === "undefined") {
     return undefined;
   }
 
-  // Sử dụng document.cookie trực tiếp thay vì js-cookie để tránh dependency issues
-  // Cải thiện regex để match chính xác hơn, bao gồm cả trường hợp cookie ở đầu hoặc giữa chuỗi
   const match = document.cookie.match(
     new RegExp("(^|;\\s*)" + name + "=([^;]+)")
   );

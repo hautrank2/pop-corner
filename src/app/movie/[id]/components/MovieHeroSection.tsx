@@ -3,15 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Star,
-  Heart,
-  Plus,
-  Share2,
-  MessageSquare,
-  PlayCircle,
-} from "lucide-react";
+import { ArrowLeft, Star, PlayCircle, ThumbsUp } from "lucide-react";
 import { MovieModel } from "~/types/movie";
 import { Button } from "~/components/ui/button";
 import { Typography } from "~/components/ui/typography";
@@ -19,6 +11,9 @@ import { getAssetUrl } from "~/utils/asset";
 import { formatNumber } from "~/utils/number";
 import { formatDuration } from "~/utils/time";
 import dayjs from "dayjs";
+import { MovieReactions } from "./MovieReactions";
+import { ReactionPicker } from "./ReactionPicker";
+import { cn } from "~/lib/utils";
 
 interface MovieHeroSectionProps {
   movie: MovieModel;
@@ -28,6 +23,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
   const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [reactionKey, setReactionKey] = useState(0);
 
   const galleryImages =
     movie.imgUrls.length > 0
@@ -43,7 +39,9 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
       /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     const videoId = match && match[2].length === 11 ? match[2] : null;
-    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : null;
+    return videoId
+      ? `https://www.youtube.com/embed/${videoId}?autoplay=1`
+      : null;
   };
 
   return (
@@ -75,7 +73,12 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
             />
 
             {/* Title Overlay */}
-            <div className="absolute bottom-0 left-0 w-full bg-black/60 px-4 py-3 bg-gradient-to-r from-black to-black">
+            <div
+              className={cn(
+                "absolute bottom-0 left-0 w-full px-4 py-3 pt-32",
+                "bg-gradient-to-t from-black via-[rbga(6, 6, 7, 0.73)] to-[rgba(0, 0, 0, 0)]"
+              )}
+            >
               <Typography
                 variant="h2"
                 className="text-neon-pink font-semibold leading-tight"
@@ -101,7 +104,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
                 onClick={() => setIsPlaying(true)}
               >
                 <Image
-                  src={getAssetUrl(movie.posterUrl)}
+                  src={getAssetUrl(movie.imgUrls[0])}
                   alt={`${movie.title} trailer`}
                   fill
                   className="object-cover"
@@ -175,38 +178,6 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
                 {isDescriptionExpanded ? "Thu gọn" : "Xem thêm"}
               </Button>
             </div>
-
-            {/* ACTION BUTTONS */}
-            <div className="flex flex-wrap items-center gap-8 mt-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
-              >
-                <Heart className="h-6 w-6 text-white" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
-              >
-                <Plus className="h-6 w-6 text-white" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
-              >
-                <Share2 className="h-6 w-6 text-white" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
-              >
-                <MessageSquare className="h-6 w-6 text-white" />
-              </Button>
-            </div>
           </div>
 
           {/* IMAGE GALLERY */}
@@ -238,6 +209,22 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="flex gap-4 items-center">
+          {/* ACTION BUTTONS */}
+          <div className="flex flex-wrap items-center gap-8 mt-2">
+            <ReactionPicker
+              movieId={movie.id}
+              onReactionSelected={() => {
+                // Refresh reactions when a new reaction is posted
+                setReactionKey((prev) => prev + 1);
+              }}
+            />
+          </div>
+
+          {/* REACTIONS */}
+          <MovieReactions key={reactionKey} movieId={movie.id} />
         </div>
       </div>
     </div>
