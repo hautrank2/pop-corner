@@ -37,6 +37,5 @@ export default async function MovieDetailPage({
   } catch (error) {
     console.error("Error fetching movie details:", error);
     return <div>{JSON.stringify(error)}</div>;
-    notFound();
   }
 }
