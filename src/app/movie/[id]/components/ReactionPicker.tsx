@@ -7,7 +7,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ReactionType } from "~/types/reaction";
 import { useApp } from "~/providers";
@@ -21,11 +21,18 @@ import {
   Lightbulb,
   ThumbsUp,
 } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { useIsMobile } from "~/hooks/use-mobile";
+import { useLongPress } from "~/hooks/use-long-press";
 
 type ReactionPickerProps = {
   movieId: string;
   onReactionSelected?: (reactionType: ReactionType) => void;
-  children: React.ReactNode;
 };
 
 const REACTION_CONFIG: Record<
@@ -48,11 +55,19 @@ const REACTION_CONFIG: Record<
 export function ReactionPicker({
   movieId,
   onReactionSelected,
-  children,
 }: ReactionPickerProps) {
   const { state } = useApp();
   const isAuthenticated = !!state.session?.userData;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { isMobile } = useIsMobile();
+
+  const longPressHandlers = useLongPress(() => {
+    if (isMobile) {
+      navigator.vibrate?.(10);
+      setOpen(true);
+    }
+  }, 400);
 
   const handleReactionClick = async (reactionType: ReactionType) => {
     if (!isAuthenticated) {
@@ -80,11 +95,68 @@ export function ReactionPicker({
     }
   };
 
+  const reactionsButtons = useMemo(() => {
+    return (
+      <div>
+        {Object.entries(REACTION_CONFIG).map(([type, config]) => {
+          const reactionType = Number(type) as ReactionType;
+
+          return (
+            <button
+              key={reactionType}
+              onClick={() => handleReactionClick(reactionType)}
+              disabled={isSubmitting}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "hover:scale-125 transition-transform duration-200",
+                "hover:bg-white/10 active:scale-110 hover:cursor-pointer",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              <span className="text-2xl">{config.emoji}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }, [isSubmitting]);
+
+  if (isMobile) {
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            {...longPressHandlers}
+            variant="ghost"
+            onClick={() => handleReactionClick(ReactionType.Like)}
+          >
+            <ThumbsUp className="h-6 w-6 text-white" />
+            Like
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          side="top"
+          align="center"
+          sideOffset={8}
+          className="w-auto"
+        >
+          {reactionsButtons}
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="inline-block">{children}</div>
+          <div className="inline-block">
+            <Button variant="ghost">
+              <ThumbsUp className="h-6 w-6 text-white" />
+              Like
+            </Button>
+          </div>
         </TooltipTrigger>
 
         <TooltipContent
@@ -98,25 +170,7 @@ export function ReactionPicker({
             "animate-in fade-in-0 zoom-in-95 duration-200"
           )}
         >
-          {Object.entries(REACTION_CONFIG).map(([type, config]) => {
-            const reactionType = Number(type) as ReactionType;
-
-            return (
-              <button
-                key={reactionType}
-                onClick={() => handleReactionClick(reactionType)}
-                disabled={isSubmitting}
-                className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center",
-                  "hover:scale-125 transition-transform duration-200",
-                  "hover:bg-white/10 active:scale-110 hover:cursor-pointer",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
-              >
-                <span className="text-2xl">{config.emoji}</span>
-              </button>
-            );
-          })}
+          {reactionsButtons}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

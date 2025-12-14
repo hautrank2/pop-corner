@@ -10,18 +10,16 @@ interface MovieReactionsProps {
   movieId: string;
 }
 
-const REACTION_CONFIG: Record<
-  ReactionType,
-  { label: string; emoji: string }
-> = {
-  [ReactionType.Like]: { label: "Like", emoji: "👍" },
-  [ReactionType.Love]: { label: "Love", emoji: "❤️" },
-  [ReactionType.Clap]: { label: "Clap", emoji: "👏" },
-  [ReactionType.Idea]: { label: "Idea", emoji: "💡" },
-  [ReactionType.Haha]: { label: "Haha", emoji: "😂" },
-  [ReactionType.Sad]: { label: "Sad", emoji: "😢" },
-  [ReactionType.Angry]: { label: "Angry", emoji: "😠" },
-};
+const REACTION_CONFIG: Record<ReactionType, { label: string; emoji: string }> =
+  {
+    [ReactionType.Like]: { label: "Like", emoji: "👍" },
+    [ReactionType.Love]: { label: "Love", emoji: "❤️" },
+    [ReactionType.Clap]: { label: "Clap", emoji: "👏" },
+    [ReactionType.Idea]: { label: "Idea", emoji: "💡" },
+    [ReactionType.Haha]: { label: "Haha", emoji: "😂" },
+    [ReactionType.Sad]: { label: "Sad", emoji: "😢" },
+    [ReactionType.Angry]: { label: "Angry", emoji: "😠" },
+  };
 
 export function MovieReactions({ movieId }: MovieReactionsProps) {
   const [reactions, setReactions] = useState<ReactionItem[]>([]);
@@ -38,7 +36,7 @@ export function MovieReactions({ movieId }: MovieReactionsProps) {
       // Đảm bảo data là array
       const reactionData = Array.isArray(res.data) ? res.data : [];
       setReactions(reactionData);
-      
+
       // Log số lượng theo từng reaction type
       const counts = Object.values(ReactionType)
         .filter((v) => typeof v === "number")
@@ -59,7 +57,6 @@ export function MovieReactions({ movieId }: MovieReactionsProps) {
     fetchReactions();
   }, [movieId]);
 
-
   const getReactionCount = (reactionType: ReactionType): number => {
     // Đếm số lượng reaction theo reactionType
     return reactions.filter((r) => r.reactionType === reactionType).length;
@@ -68,7 +65,9 @@ export function MovieReactions({ movieId }: MovieReactionsProps) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-4 mt-4">
-        <Typography className="text-foreground/60">Loading reactions...</Typography>
+        <Typography className="text-foreground/60">
+          Loading reactions...
+        </Typography>
       </div>
     );
   }
@@ -91,7 +90,7 @@ export function MovieReactions({ movieId }: MovieReactionsProps) {
               key={reactionType}
               className={cn(
                 "flex items-center gap-2 h-auto py-2 px-3 rounded-full",
-                "border-2 border-white/20 bg-panel-bg/50"
+                "bg-card"
               )}
             >
               <span className="text-lg">{config.emoji}</span>
@@ -105,4 +104,3 @@ export function MovieReactions({ movieId }: MovieReactionsProps) {
     </div>
   );
 }
-

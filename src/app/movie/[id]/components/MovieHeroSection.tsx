@@ -104,7 +104,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
                 onClick={() => setIsPlaying(true)}
               >
                 <Image
-                  src={getAssetUrl(movie.posterUrl)}
+                  src={getAssetUrl(movie.imgUrls[0])}
                   alt={`${movie.title} trailer`}
                   fill
                   className="object-cover"
@@ -220,15 +220,7 @@ export function MovieHeroSection({ movie }: MovieHeroSectionProps) {
                 // Refresh reactions when a new reaction is posted
                 setReactionKey((prev) => prev + 1);
               }}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 rounded-full border-4 border-white hover:bg-white/10"
-              >
-                <ThumbsUp className="h-6 w-6 text-white" />
-              </Button>
-            </ReactionPicker>
+            />
           </div>
 
           {/* REACTIONS */}
