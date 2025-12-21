@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { httpClient } from "~/api";
 import { ArtistModel } from "~/types/artist";
 import { GenreModel } from "~/types/genre";
 import { MovieModel } from "~/types/movie";
@@ -16,14 +15,17 @@ import { ActorSection } from "./_components/ActorSection";
 import { AppFooter } from "~/components/layouts/footer";
 import { PageError } from "~/components/pages";
 import Script from "next/script";
+import { httpServer } from "./libs/server-http";
 
 export default async function Home() {
   try {
+    const http = await httpServer();
     const [moviesRes, genresRes, actorsRes] = await Promise.all([
-      httpClient.get<TableResponse<MovieModel>>("/api/movie"),
-      httpClient.get<GenreModel[]>("/api/genre"),
-      httpClient.get<TableResponse<ArtistModel>>("/api/artist"),
+      http.get<TableResponse<MovieModel>>("/api/movie"),
+      http.get<GenreModel[]>("/api/genre"),
+      http.get<TableResponse<ArtistModel>>("/api/artist"),
     ]);
+    console.log(moviesRes, genresRes, actorsRes);
 
     const movies = moviesRes.data.items;
     const genres = genresRes.data;

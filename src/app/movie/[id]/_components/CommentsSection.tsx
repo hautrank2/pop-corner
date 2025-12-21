@@ -9,6 +9,7 @@ import { CommentInput } from "./CommentInput";
 import { Typography } from "~/components/ui/typography";
 import { Separator } from "~/components/ui/separator";
 import { toast } from "sonner";
+import { getPath } from "~/lib/navigate";
 
 interface CommentsSectionProps {
   movieId: string;
@@ -41,15 +42,18 @@ const buildCommentTree = (comments: CommentModel[]): CommentModel[] => {
   return roots;
 };
 
-export function CommentsSection({ movieId, initialComments }: CommentsSectionProps) {
+export function CommentsSection({
+  movieId,
+  initialComments,
+}: CommentsSectionProps) {
   const { state } = useApp();
   const isAuthenticated = !!state.session?.userData;
-  
+
   // State quản lý danh sách comment dạng cây
   const [comments, setComments] = useState<CommentModel[]>(() =>
     buildCommentTree(initialComments ?? [])
   );
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -64,9 +68,11 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
       );
 
       const list: CommentModel[] = Array.isArray(res.data) ? res.data : [];
-      
+
       // Lọc unique ID trước khi build tree
-      const uniqueList = Array.from(new Map(list.map((c) => [c.id, c])).values());
+      const uniqueList = Array.from(
+        new Map(list.map((c) => [c.id, c])).values()
+      );
 
       setComments(buildCommentTree(uniqueList));
     } catch (err) {
@@ -77,7 +83,10 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
     }
   };
 
-  const handleSubmit = async (content: string, parentId: string | null = null) => {
+  const handleSubmit = async (
+    content: string,
+    parentId: string | null = null
+  ) => {
     if (!content?.trim()) return;
 
     if (!isAuthenticated) {
@@ -89,11 +98,13 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
 
     try {
       // Chỉ gửi parentId nếu có giá trị (không gửi null)
-      const payload: { content: string; parentId?: string } = { content: content.trim() };
+      const payload: { content: string; parentId?: string } = {
+        content: content.trim(),
+      };
       if (parentId) {
         payload.parentId = parentId;
       }
-      
+
       const res = await httpClient.post<CommentModel>(
         `/api/movie/${movieId}/comment`,
         payload
@@ -109,7 +120,7 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
 
       // Refetch comments để sync với server
       await fetchComments();
-      
+
       // Đóng form reply sau khi submit thành công
       if (parentId) {
         setActiveReplyId(null);
@@ -120,9 +131,10 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
       console.error("post comment error:", err);
       console.error("Error response:", err.response?.data);
       console.error("Error status:", err.response?.status);
-      
+
       // Hiển thị thông báo lỗi chi tiết hơn
-      const errorMessage = err.response?.data?.message || err.message || "Failed to post comment.";
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to post comment.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -161,7 +173,10 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
       toast.success("Comment updated!");
     } catch (err: any) {
       console.error("update comment error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Failed to update comment.";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update comment.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -190,7 +205,10 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
       toast.success("Comment deleted!");
     } catch (err: any) {
       console.error("delete comment error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Failed to delete comment.";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to delete comment.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -221,7 +239,7 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
             ) : (
               comments.map((c) => (
                 <CommentCard
-                  key={c.id} 
+                  key={c.id}
                   comment={c}
                   onReplyClick={setActiveReplyId}
                   onReplySubmit={handleSubmit}
@@ -233,6 +251,7 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
                   isSubmitting={isSubmitting}
                   currentUserId={state.session?.userData?.id}
                   depth={0}
+                  isAuthenticated={isAuthenticated}
                 />
               ))
             )}
@@ -253,7 +272,14 @@ export function CommentsSection({ movieId, initialComments }: CommentsSectionPro
             </>
           ) : (
             <Typography className="text-center text-foreground/70">
-              You must be logged in to comment.
+              You must be{" "}
+              <a
+                className="text-secondary hover:underline"
+                href={getPath().login}
+              >
+                logged in
+              </a>{" "}
+              to comment.
             </Typography>
           )}
         </div>

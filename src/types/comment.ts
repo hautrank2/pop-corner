@@ -6,7 +6,7 @@ export interface Author {
 
 export interface CommentModel {
   id: string;
-  author: Author;
+  user: Author;
   content: string;
   parentId: string | null;
   createdAt: string;

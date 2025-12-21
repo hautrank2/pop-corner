@@ -1,9 +1,8 @@
 import { MovieModel } from "~/types/movie";
-import { MovieDetailContent } from "./MovieDetailContent";
 import { CommentModel } from "~/types/comment";
 import { MovieCreditModel } from "~/types/credit";
-import { notFound } from "next/navigation";
 import { httpServer } from "~/app/libs/server-http";
+import { MovieDetailContent } from "./_components/MovieDetailContent";
 
 interface MovieDetailPageProps {
   params: Promise<{
