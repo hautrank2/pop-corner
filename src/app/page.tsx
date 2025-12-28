@@ -14,8 +14,8 @@ import { GenreSection } from "./_components/GenreSection";
 import { ActorSection } from "./_components/ActorSection";
 import { AppFooter } from "~/components/layouts/footer";
 import { PageError } from "~/components/pages";
-import Script from "next/script";
 import { httpServer } from "./libs/server-http";
+import Script from "next/script";
 
 export default async function Home() {
   try {
@@ -25,7 +25,6 @@ export default async function Home() {
       http.get<GenreModel[]>("/api/genre"),
       http.get<TableResponse<ArtistModel>>("/api/artist"),
     ]);
-    console.log(moviesRes, genresRes, actorsRes);
 
     const movies = moviesRes.data.items;
     const genres = genresRes.data;

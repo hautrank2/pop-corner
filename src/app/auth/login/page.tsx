@@ -31,6 +31,8 @@ import { useState } from "react";
 import { Separator } from "~/components/ui/separator";
 import { PasswordInput } from "~/components/ui/password-input";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { getPath } from "~/lib/navigate";
 
 // ----- Zod schema -----
 const LoginSchema = z.object({
@@ -130,12 +132,13 @@ const LoginPage = () => {
                     <FormItem className="space-y-2">
                       <div className="flex items-center justify-between">
                         <FormLabel>Password</FormLabel>
-                        <button
+                        <Link
+                          href={getPath().forgotPassword}
                           type="button"
-                          className="text-xs font-medium text-primary hover:underline"
+                          className="text-xs font-medium text-primary hover:underline hover:cursor-pointer"
                         >
                           Forgot password?
-                        </button>
+                        </Link>
                       </div>
                       <FormControl>
                         <PasswordInput
