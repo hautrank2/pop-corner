@@ -8,9 +8,6 @@ import { LoginResponse } from "~/types/auth";
 export async function POST(req: Request) {
   const body = await req.json();
   const { email, password } = body;
-
-  console.log("POST", email, password);
-
   // Gửi sang .NET để verify hoặc tự verify ở đây...
   // const token = await loginApi(email, password);
 
@@ -33,7 +30,7 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err: unknown) {
-    console.log("err");
+    console.log("err", err);
     return new Response(JSON.stringify(err), {
       status: 400,
       headers: { "Content-Type": "application/json" },
