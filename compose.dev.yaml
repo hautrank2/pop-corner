@@ -1,0 +1,23 @@
+services:
+  web:
+    container_name: pop-corner-server-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+      # Force file watching qua polling (bắt buộc trên Docker Desktop Win/Mac/WSL2)
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "100"
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3003:3001"
+    volumes:
+      # Mount source code: save file ở host = file trong container thay đổi
+      - .:/usr/src/app
+      # Anonymous volume bảo vệ node_modules trong container,
+      # tránh node_modules trên host (nếu có) đè qua bind mount phía trên
+      - /usr/src/app/node_modules
+    command: pnpm dev

@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+
+ARG NODE_VERSION=22.12.0
+ARG PNPM_VERSION=10.4.1
+
+FROM node:${NODE_VERSION}-alpine
+
+WORKDIR /usr/src/app
+
+# Cài pnpm
+RUN --mount=type=cache,target=/root/.npm \
+    npm install -g pnpm@${PNPM_VERSION}
+
+# Copy manifest trước để tận dụng cache layer Docker
+COPY package.json pnpm-lock.yaml ./
+
+# Cài full deps (cả devDependencies — cần cho Vite)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Copy source (sẽ bị bind mount đè khi chạy compose, nhưng giữ ở đây
+# để image vẫn chạy được độc lập)
+COPY . .
+
+# Vite dev server mặc định port 5173
+EXPOSE 3001
+
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]
